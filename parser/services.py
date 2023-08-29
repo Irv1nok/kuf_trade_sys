@@ -9,8 +9,8 @@ import pickle
 import re
 
 
-def save_coockies(category : str, accept_button_class: str):
-    """сохранение и запись в файл coockies"""
+def save_cookies(category: str, accept_button_class: str):
+    """сохранение и запись в файл cookies"""
     try:
         driver.get(category)
         sleep_driver(driver, 10)
@@ -21,10 +21,15 @@ def save_coockies(category : str, accept_button_class: str):
         pickle.dump(driver.get_cookies(), open("cookies", "wb"))
 
     except Exception as ex:
-        return ex
+        print(ex)
 
-def parse(category: Dict[str, dict]):
+
+def parse(category: Dict[str, dict], cat_id: int, update_db=False):
     """Парсит переданную категорию и сохраняет ее в БД"""
+    if not os.path.exists('cookies'):
+        save_cookies(category=categories['url'], accept_button_class=categories['accept_button_class'])
+
+    driver.get(category['url'])
     for cookie in pickle.load(open("cookies", "rb")):
         driver.add_cookie(cookie)
 
@@ -33,17 +38,22 @@ def parse(category: Dict[str, dict]):
     first_page = True
     try:
         while True:
-            data_cards = driver.find_elements(by=By.XPATH, value=category['wrapper'])
+            data_cards = driver.find_elements(by=By.XPATH, value=category["wrapper"])
 
-            for card in data_cards:
-                save_all_data({'price': card.find_element(by=By.XPATH, value=category["price"]).text,
-                                'title': card.find_element(by=By.XPATH, value=category['title']).text,
-                                 'country': card.find_element(by=By.XPATH,
-                                                        value=category['country-date']).text.split('\n')[0],
-                                 'date': card.find_element(by=By.XPATH,
-                                                        value=category['country-date']).text.split('\n')[1],
-                                 'url': card.get_attribute('href'),
-                               'id_item': re.search("\d{8,}", card.get_attribute('href')).group()})
+            for card in data_cards[:-8]:
+                item_in_card = {'price': card.find_element(by=By.CLASS_NAME, value=category["price"]).text,
+                                'title': card.find_element(by=By.CLASS_NAME, value=category["title"]).text,
+                                'country': card.find_element(by=By.CLASS_NAME,
+                                                             value=category["country-date"]).text.split('\n')[0],
+                                'date': card.find_element(by=By.CLASS_NAME,
+                                                          value=category["country-date"]).text.split('\n')[1],
+                                'url': card.get_attribute('href'),
+                                'item_id': re.search("\d{8,}", card.get_attribute("href")).group()}
+
+                if not update_db:
+                    save_all_data(item_in_card, cat_id)
+                else:
+                    update_data(item_in_card)
 
             sleep_driver(driver, 1)
             if first_page:
@@ -57,7 +67,7 @@ def parse(category: Dict[str, dict]):
             sleep_driver(driver, 5)
 
     except Exception as ex:
-        return ex
+        print(ex)
     finally:
         driver.close()
         driver.quit()
@@ -68,14 +78,27 @@ def sleep_driver(driver, sec):
     time.sleep(sec)
     driver.implicitly_wait(sec)
 
-def save_all_data(data: dict):
-    KufarItems.objects.create(id_item=data['id_item'], price=data['price'], title=data['title'],
-                              country=data['country'], date=data['date'], url=data['url'])
+
+def save_all_data(data: Dict[str, str], cat_id: int):
+    if type(data['price']) == str and data['id_item'] == str:
+        price = ''.join(data['price'].strip(". pр").split())
+        try:
+            price = int(price)  # преобразуем в число или 0 если цена "Договорная"
+            try:
+                id_item = int(data['id_item'])
+            except ValueError:
+                raise ValueError(f'{data["id_item"]} ошибка формата входных данных')
+        except ValueError:
+            price = 0
+
+    # print(price, data['title'], data['country'], data['date'], data['url'], int(data['item_id']))
+    KufarItems.objects.create(price=price, id_item=id_item, title=data['title'],
+                              country=data['country'], date=data['date'], url=data['url'], cat_id=cat_id)
+
+
+def update_data(data: Dict[str, str], cat_id: int):
+    pass
 
 
 if __name__ == '__main__':
-    if not os.path.exists('cookies'):
-        save_coockies(categories['kufar_notebooks']['url'],
-                      accept_button_class=categories['kufar_notebooks']['accept_button_class'])
-
-    parse(categories['kufar_notebooks'])
+    parse(category=categories['kufar_notebooks'], cat_id=1)
