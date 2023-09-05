@@ -1,5 +1,5 @@
-import os
-import pickle
+# import os
+# import pickle
 import re
 import time
 from parser.models import KufarItems
@@ -41,7 +41,7 @@ def parse_web_page(category: Dict[str, dict], cat_id: int, update_db: bool = Fal
     # for cookie in pickle.load(open("cookies", "rb")):
     #     driver.add_cookie(cookie)
 
-    driver.refresh()
+    # driver.refresh()
     sleep_driver(driver, 10)
     first_page = True
     obj_count = 0

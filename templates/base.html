@@ -1,3 +1,8 @@
+{% url 'home' as home_url %}
+{% url 'test_conn' as test_conn_url %}
+{% url 'parse_pages' as parse_pages_url %}
+{% url 'bot_config' as bot_config_url %}
+
 <!doctype html>
 {% load static %}
 <html lang="en" data-bs-theme="auto">
@@ -170,42 +175,38 @@
   <h1 class="visually-hidden">Sidebars examples</h1>
 
   <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="width: 280px;">
-    <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-{#      <svg class="bi pe-none me-2" width="40" height="32">#}
+    <a href={% url 'home' %} class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
           <img src="{% static 'share_logo_new.png' %}" style="width:40%">
-{#      </svg>#}
       <span class="fs-5">Kufar administration</span>
     </a>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item">
-        <a href="#" class="nav-link active" aria-current="page">
+    <li class="nav-item">
+        <a href={% url "home" %} class="nav-link
+           {% if request.path == home_url %}active{% else %}text-white{% endif %}"aria-current="page">
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#home"/></svg>
-          Home
+          Объявления
         </a>
       </li>
       <li>
-        <a href="#" class="nav-link text-white">
+        <a href={% url "test_conn" %} class="nav-link
+           {% if request.path == test_conn_url %}active{% else %}text-white{% endif %}">
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
-          Dashboard
+          Тест соединения
         </a>
       </li>
       <li>
-        <a href="#" class="nav-link text-white">
+        <a href={% url "parse_pages" %} class="nav-link
+           {% if request.path == parse_pages_url %}active{% else %}text-white{% endif %}">
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
-          Orders
+          Управление парсером
         </a>
       </li>
       <li>
-        <a href="#" class="nav-link text-white">
+        <a href={% url "bot_config" %} class="nav-link
+           {% if request.path == bot_config_url %}active{% else %}text-white{% endif %}">
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
-          Products
-        </a>
-      </li>
-      <li>
-        <a href="#" class="nav-link text-white">
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
-          Customers
+          Конфигурация бота
         </a>
       </li>
     </ul>
