@@ -1,7 +1,7 @@
 from django.contrib import admin
 from parser.models import *
 
-categories = ('name', 'title', 'price', 'country_date', 'wrapper', 'url', 'accept_button')
+categories = ('name', 'title', 'price', 'country_date', 'wrapper', 'next_page', 'url', 'accept_button')
 
 
 class ParserAdmin(admin.ModelAdmin):
