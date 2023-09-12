@@ -31,7 +31,11 @@ from selenium.webdriver.common.by import By
 #         print(ex)
 
 
-def parse_web_page(category: Dict[str, dict], cat_id: int, update_db: bool = False, test_conn: bool = False):
+def parse_web_page(category: Dict[str, dict],
+                   cat_id: int,
+                   update_db: bool = False,
+                   test_conn: bool = False,
+                   ):
     """Парсит переданную категорию и сохраняет ее в БД"""
     driver = start_chrome_driver()
     # if not os.path.exists('cookies'):
@@ -44,33 +48,36 @@ def parse_web_page(category: Dict[str, dict], cat_id: int, update_db: bool = Fal
     # driver.refresh()
     sleep_driver(driver, 10)
     first_page = True
-    obj_count = 0
+    double_item_count = 0  # Найденные дубли в бд
 
     try:
         while True:
             data_cards = driver.find_elements(by=By.XPATH, value=category["wrapper"])
 
             for card in data_cards[:-8]:
-                item_in_card = {'price': card.find_element(by=By.CLASS_NAME, value=category["price"]).text,
-                                'title': card.find_element(by=By.CLASS_NAME, value=category["title"]).text,
+                item_in_card = {'price': card.find_element(by=By.CLASS_NAME,
+                                                           value=category["price"]).text,
+                                'title': card.find_element(by=By.CLASS_NAME,
+                                                           value=category["title"]).text,
                                 'country': card.find_element(by=By.CLASS_NAME,
                                                              value=category["country_date"]).text.split('\n')[0],
                                 'date': card.find_element(by=By.CLASS_NAME,
                                                           value=category["country_date"]).text.split('\n')[1],
                                 'url': card.get_attribute('href'),
-                                'item_id': re.search("\d{8,}", card.get_attribute("href")).group()}
+                                'id_item': re.search("\d{8,}", card.get_attribute("href")).group()}
                 if test_conn:
                     return item_in_card
                 if not update_db:
-                    save_data(item_in_card, cat_id)
+                    if not save_data(item_in_card, cat_id):  # Возвращается False если найден дубль.
+                        double_item_count += 1
+                        if double_item_count > 20:  # Если найдено больше 20 дублей в бд завершает работу
+                            return
+
                 else:
                     update_data(item_in_card, cat_id)
-                    obj_count += 1
-                    if obj_count == 45:
-                        return
 
             sleep_driver(driver, 1)
-            if first_page:
+            if first_page:  # Переход на след. страницу.
                 driver.find_element(by=By.XPATH, value=category['next_page']).click()
                 first_page = False
             else:
@@ -81,22 +88,22 @@ def parse_web_page(category: Dict[str, dict], cat_id: int, update_db: bool = Fal
             sleep_driver(driver, 5)
 
     except Exception as ex:
-        print('Error in object', ex)
+        print('Error in parse_web_page func', ex)
     finally:
         driver.close()
         driver.quit()
 
 
-def convert_int_to_str(data: dict[str, str]):
+def convert_str_to_int(data: dict[str, str]):
     """преобразует price и item_id в коллекции к int"""
-    if isinstance(data['price'], str) and isinstance(data['item_id'], str):
+    if isinstance(data['price'], str) and isinstance(data['id_item'], str):
         price = ''.join(data['price'].strip(". pр").split())
         try:
             data['price'] = int(price)  # преобразуем в число или возвращаем 0 если цена "Договорная"
             try:
-                data['item_id'] = int(data['item_id'])
+                data['id_item'] = int(data['id_item'])
             except ValueError as ex:
-                print(ex, f'{data["item_id"]} ошибка формата входных данных')
+                print(ex, f'{data["id_item"]} ошибка формата входных данных')
         except ValueError:
             data['price'] = 0
     return data
@@ -108,25 +115,33 @@ def sleep_driver(driver, sec):
 
 
 def save_data(data: Dict[str, ...], cat_id: int):
-    res = convert_int_to_str(data)
-    obj = KufarItems.objects.create(id_item=res['id_item'], title=res['title'],
-                                    country=res['country'], date=res['date'], url=res['url'], cat_id=cat_id)
+    """Сохраняет распарсенные данные в бд"""
+    res = convert_str_to_int(data)
+    try:
+        obj = KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
+                                        country=res['country'], date=res['date'], url=res['url'], cat_id=cat_id)
+    except Exception as ex:
+        print('Error in save_data func', ex)
+        return False
 
-    obj.price.def_price = data['price']
     obj.save()
+    print('save_success', obj)
 
 
 def update_data(data: Dict[str, ...], cat_id: int):
+    """Функц обновляет поля цены и загаловка во всех записях в бд"""
+    res = convert_str_to_int(data)
+    print('update convert')
     try:
-        obj = KufarItems.objects.get(data['id_item'])
+        obj = KufarItems.objects.get(id_item=res['id_item'])
     except ObjectDoesNotExist:
-        save_data(data, cat_id)
+        save_data(data=data, cat_id=cat_id)
         return
-
-    if not obj.price.def_price == data['price']:
-        obj.price.new_price = data['price']
-        obj.title = data['title']
-        obj.save(update_fields=['price', 'title'])
+    print('update edit')
+    if not obj.base_price == res['price']:
+        obj.new_price = res['price']
+        obj.title = res['title']
+        obj.save(update_fields=['new_price', 'title'])
 
 
 def check_delete_or_sold_obj(cat_id: int):
@@ -136,6 +151,8 @@ def check_delete_or_sold_obj(cat_id: int):
         if res.status_code == 404:
             q.deleted = True
             q.save()
+            print('saved')
+        print('pass')
 
 
 def start_chrome_driver():
@@ -144,10 +161,10 @@ def start_chrome_driver():
     # options
     options = webdriver.ChromeOptions()
     options.add_argument(f"--user-agent={useragent.random}")
-    # options.headless = True # Безоконный режим
+    options.headless = True  # Безоконный режим
     options.add_argument("user-data-dir=C:\\profile")
-    options.add_argument("--headless")
     options.add_argument("--start-maximized")
+    options.add_argument("window-size=1400,600")
     options.add_argument(f"--disable-blink-features=AutomationControlled")
     # off errors in console
     options.add_experimental_option('excludeSwitches', ['enable-logging'])

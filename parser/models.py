@@ -3,7 +3,8 @@ from django.db import models
 
 class KufarItems(models.Model):
     id_item = models.IntegerField(unique=True)
-    price = models.ForeignKey('Prices', on_delete=models.PROTECT, verbose_name="Цена")
+    base_price = models.IntegerField(verbose_name="Стартовая цена")
+    new_price = models.IntegerField(default=0, verbose_name="Новая цена")
     title = models.CharField(max_length=100, verbose_name="Название")
     country = models.CharField(max_length=20, verbose_name="Город")
     date = models.CharField(max_length=20, verbose_name="Дата создания, обновления")
@@ -21,15 +22,10 @@ class KufarItems(models.Model):
         verbose_name_plural = 'Товары куфара'
 
 
-class Prices(models.Model):
-    def_price = models.IntegerField(default=0, verbose_name="Старая цена")
-    new_price = models.IntegerField(default=0, verbose_name="Новая цена")
-
-
 class Category(models.Model):
     name = models.CharField(max_length=50, db_index=True, verbose_name="Название")
     wrapper = models.CharField(max_length=50, verbose_name="Класс оболочка")
-    title = models.CharField(max_length=50, verbose_name="Класс загаловка")
+    title = models.CharField(max_length=50, verbose_name="Класс заголовка")
     price = models.CharField(max_length=50, verbose_name="Класс цены")
     country_date = models.CharField(max_length=50, verbose_name="Класс города и времени")
     next_page = models.CharField(max_length=100, verbose_name="Класс кнопки след.стр")

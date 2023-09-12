@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}<br>Управление парсером:{% endblock %}
+
+{% block title %}<br><h4>Управление парсером:</h4>{% endblock %}
 
 {% block content %}
     <br>
@@ -8,7 +9,8 @@
             <form action="" method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit" class="btn btn-primary">Запустить парсер</button>
+
+                <button type="submit" class="btn btn-primary">Запустить</button>
             </form>
 
 

@@ -189,13 +189,6 @@
         </a>
       </li>
       <li>
-        <a href={% url "test_conn" %} class="nav-link
-           {% if request.path == test_conn_url %}active{% else %}text-white{% endif %}">
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
-          Тест соединения
-        </a>
-      </li>
-      <li>
         <a href={% url "parse_pages" %} class="nav-link
            {% if request.path == parse_pages_url %}active{% else %}text-white{% endif %}">
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
