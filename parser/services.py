@@ -131,13 +131,13 @@ def save_data(data: Dict[str, ...], cat_id: int):
 def update_data(data: Dict[str, ...], cat_id: int):
     """Функц обновляет поля цены и загаловка во всех записях в бд"""
     res = convert_str_to_int(data)
-    print('update convert')
+
     try:
         obj = KufarItems.objects.get(id_item=res['id_item'])
     except ObjectDoesNotExist:
         save_data(data=data, cat_id=cat_id)
         return
-    print('update edit')
+
     if not obj.base_price == res['price']:
         obj.new_price = res['price']
         obj.title = res['title']
