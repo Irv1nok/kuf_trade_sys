@@ -1,5 +1,6 @@
 # import os
 # import pickle
+import logging
 import re
 import time
 from parser.models import KufarItems
@@ -9,11 +10,11 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from fake_useragent import UserAgent
 
-import requests
-
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+
+logger = logging.getLogger(__name__)
 
 
 # def save_cookies(driver, category: str, accept_button_class: str):
@@ -37,6 +38,10 @@ def parse_web_page(category: Dict[str, dict],
                    test_conn: bool = False,
                    ):
     """Парсит переданную категорию и сохраняет ее в БД"""
+
+    if update_db:
+        KufarItems.objects.filter(cat_id=cat_id).update(deleted=True)  # Сброс к дефолтным зн.бд.
+
     driver = start_chrome_driver()
     # if not os.path.exists('cookies'):
     #     save_cookies(driver, category=category['url'], accept_button_class=category['accept_button'])
@@ -46,7 +51,7 @@ def parse_web_page(category: Dict[str, dict],
     #     driver.add_cookie(cookie)
 
     # driver.refresh()
-    sleep_driver(driver, 10)
+    sleep_driver(driver, 7)
     first_page = True
     double_item_count = 0  # Найденные дубли в бд
 
@@ -71,12 +76,12 @@ def parse_web_page(category: Dict[str, dict],
                     if not save_data(item_in_card, cat_id):  # Возвращается False если найден дубль.
                         double_item_count += 1
                         if double_item_count > 20:  # Если найдено больше 20 дублей в бд завершает работу
-                            return
+                                return
 
                 else:
                     update_data(item_in_card, cat_id)
 
-            sleep_driver(driver, 1)
+            time.sleep(1)
             if first_page:  # Переход на след. страницу.
                 driver.find_element(by=By.XPATH, value=category['next_page']).click()
                 first_page = False
@@ -85,10 +90,10 @@ def parse_web_page(category: Dict[str, dict],
                 next_page = driver.find_elements(by=By.XPATH, value=category['next_page'])
                 next_page[1].click()
 
-            sleep_driver(driver, 5)
+            sleep_driver(driver, 3)
 
     except Exception as ex:
-        print('Error in parse_web_page func', ex)
+        logger.error(f'Error in parse_web_page func {ex}')
     finally:
         driver.close()
         driver.quit()
@@ -103,7 +108,7 @@ def convert_str_to_int(data: dict[str, str]):
             try:
                 data['id_item'] = int(data['id_item'])
             except ValueError as ex:
-                print(ex, f'{data["id_item"]} ошибка формата входных данных')
+                logger.error(f'{data["id_item"]} ошибка формата входных данных {ex}')
         except ValueError:
             data['price'] = 0
     return data
@@ -121,38 +126,44 @@ def save_data(data: Dict[str, ...], cat_id: int):
         obj = KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
                                         country=res['country'], date=res['date'], url=res['url'], cat_id=cat_id)
     except Exception as ex:
-        print('Error in save_data func', ex)
+        logger.debug(f'Error in save_data func {ex}')
         return False
 
     obj.save()
-    print('save_success', obj)
+    logger.debug('save_success')
+    return True
 
 
 def update_data(data: Dict[str, ...], cat_id: int):
-    """Функц обновляет поля цены и загаловка во всех записях в бд"""
     res = convert_str_to_int(data)
 
     try:
         obj = KufarItems.objects.get(id_item=res['id_item'])
-    except ObjectDoesNotExist:
+    except Exception:
         save_data(data=data, cat_id=cat_id)
+        logger.debug('saved')
         return
 
     if not obj.base_price == res['price']:
         obj.new_price = res['price']
-        obj.title = res['title']
-        obj.save(update_fields=['new_price', 'title'])
+    obj.title = res['title']
+    obj.deleted = False
+    obj.save(update_fields=['new_price', 'title', 'deleted'])
+    logger.debug('updated')
 
 
-def check_delete_or_sold_obj(cat_id: int):
-    qs = KufarItems.objects.filter(cat_id=cat_id) & KufarItems.objects.filter(deleted=False)
-    for q in qs:
-        res = requests.get(q.url)
-        if res.status_code == 404:
-            q.deleted = True
-            q.save()
-            print('saved')
-        print('pass')
+# def check_delete_or_sold_obj(cat_id: int):
+#     qs = KufarItems.objects.filter(cat_id=cat_id) & KufarItems.objects.filter(deleted=False)
+#     for q in qs:
+#         # sess = requests.Session()
+#         res = requests.get(q.url)
+#         print(res.status_code)
+#         if res.status_code == 404:
+#             q.deleted = True
+#             q.save()
+#             logger.debug('saved')
+#         logger.debug('pass')
+#         time.sleep(0.3)
 
 
 def start_chrome_driver():
@@ -161,7 +172,7 @@ def start_chrome_driver():
     # options
     options = webdriver.ChromeOptions()
     options.add_argument(f"--user-agent={useragent.random}")
-    options.headless = True  # Безоконный режим
+    # options.headless = True  # Безоконный режим
     options.add_argument("user-data-dir=C:\\profile")
     options.add_argument("--start-maximized")
     options.add_argument("window-size=1400,600")

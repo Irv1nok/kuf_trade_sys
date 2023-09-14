@@ -17,7 +17,8 @@ class KufarItemsAdmin(admin.ModelAdmin):
     class Meta:
         model = KufarItems
 
-    list_display = ('title', 'base_price', 'new_price', 'country', 'date', 'time_create', 'time_update', 'deleted', 'cat')
+    list_display = ('title', 'base_price', 'new_price', 'country', 'date',
+                    'time_create', 'time_update', 'deleted', 'cat', 'url')
 
 
 admin.site.register(Category, ParserAdmin)

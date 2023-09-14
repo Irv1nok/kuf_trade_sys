@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
+
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -148,22 +149,28 @@ LOGGING = {
             "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'formatter': 'verbose',
-            'filename': BASE_DIR.joinpath('log/application.log'),
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "formatter": "verbose",
+            "filename": BASE_DIR.joinpath("log/application.log"),
         }
     },
     "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "filters": ["require_debug_true"],
+        },
         "django.request": {
             "handlers": ["file"],
             "level": "DEBUG",
             "propagate": False,
         },
-        # 'django.db.backends': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['file'],
-        # }
+        "django.db.backends": {
+            "level": "WARNING",
+            "handlers": ["console", "file"],
+            "propagate": False,
+        },
     },
 }
