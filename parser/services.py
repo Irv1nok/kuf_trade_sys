@@ -64,8 +64,8 @@ def parse_web_page(category: Dict[str, dict],
                                                            value=category["price"]).text,
                                 'title': card.find_element(by=By.CLASS_NAME,
                                                            value=category["title"]).text,
-                                'country': card.find_element(by=By.CLASS_NAME,
-                                                             value=category["country_date"]).text.split('\n')[0],
+                                'city': card.find_element(by=By.CLASS_NAME,
+                                                          value=category["country_date"]).text.split('\n')[0],
                                 'date': card.find_element(by=By.CLASS_NAME,
                                                           value=category["country_date"]).text.split('\n')[1],
                                 'url': card.get_attribute('href'),
@@ -124,7 +124,7 @@ def save_data(data: Dict[str, ...], cat_id: int):
     res = convert_str_to_int(data)
     try:
         obj = KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
-                                        country=res['country'], date=res['date'], url=res['url'], cat_id=cat_id)
+                                        city=res['city'], date=res['date'], url=res['url'], cat_id=cat_id)
     except Exception as ex:
         logger.debug(f'Error in save_data func {ex}')
         return False

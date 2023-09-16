@@ -25,6 +25,11 @@ class KufarItemsForm(forms.Form):
                             required=False,
                             widget=forms.TextInput(attrs={'class': 'form-control'}),
                             help_text='Введите название товара')
+    city = forms.CharField(label='Город',
+                           max_length=10,
+                           required=False,
+                           widget=forms.TextInput(attrs={'class': 'form-control'}),
+                           help_text='Введите название Города')
 
     price_min = forms.IntegerField(label='Минимальная цена',
                                    widget=forms.NumberInput(attrs={'class': 'form-control'}),
@@ -37,4 +42,3 @@ class KufarItemsForm(forms.Form):
     deleted = forms.BooleanField(label='Продано или нет',
                                  widget=forms.CheckboxInput(),
                                  required=False)
-

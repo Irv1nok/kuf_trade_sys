@@ -1,4 +1,7 @@
 import logging
+
+from django.core.paginator import Paginator
+
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
 from parser.services import parse_web_page
@@ -8,29 +11,50 @@ from background_task import background
 from django.shortcuts import render, redirect
 
 logger = logging.getLogger(__name__)
+QS_FILTERED_ITEMS = None
 
 
 def index(request):
-    if request.method == 'POST':
-        form = KufarItemsForm(request.POST)
-        if form.is_valid():
-            res = form.cleaned_data
-            qs = KufarItems.objects.filter(cat_id=res['category'].pk)
-            qs_filtered = None
-            if qs:
-                if res['title']:
-                    qs_filtered = qs.filter(title__contains=res['title'])
-                if res['price_min']:
-                    qs_filtered = qs_filtered.filter(base_price__gte=res['price_min'])
-                if res['price_max']:
-                    qs_filtered = qs_filtered.filter(base_price__lte=res['price_max'])
-                if res['deleted']:
-                    qs_filtered = qs_filtered.filter(deleted=True)
-                return render(request, 'detail.html', {'qs': qs_filtered})
-            return render(request, 'index.html', {'form': form})
-    else:
-        form = KufarItemsForm()
+    form = KufarItemsForm()
     return render(request, 'index.html', {'form': form})
+
+
+def search_list_items(request):
+    global QS_FILTERED_ITEMS
+    if request.GET.get('category'):
+        try:
+            category = int(request.GET.get('category'))
+        except ValueError:
+            return redirect('/')
+        title = request.GET.get('title', default=None)
+        city = request.GET.get('city', default=None)
+        pr_min = request.GET.get('price_min', default=None)
+        pr_max = request.GET.get('price_max', default=None)
+        deleted = request.GET.get('deleted')
+
+        QS_FILTERED_ITEMS = KufarItems.objects.filter(cat_id=category)
+        if QS_FILTERED_ITEMS:
+            if title:
+                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(title__contains=title)
+            if city:
+                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(city__contains=city)
+            if pr_min:
+                try:
+                    QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(base_price__gte=int(pr_min))
+                except ValueError:
+                    pass
+            if pr_max:
+                try:
+                    QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(base_price__lte=int(pr_max))
+                except ValueError:
+                    pass
+            if deleted == 'on':
+                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(deleted=True)
+
+    paginator = Paginator(QS_FILTERED_ITEMS.order_by('-date'), 25)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'list.html', {'page_obj': page_obj})
 
 
 # @background(schedule=10)

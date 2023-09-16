@@ -61,3 +61,12 @@ main {
 .scrollarea {
   overflow-y: auto;
 }
+
+.my-custom-scrollbar {
+position: relative;
+height: 200px;
+overflow: auto;
+}
+.table-wrapper-scroll-y {
+display: block;
+}

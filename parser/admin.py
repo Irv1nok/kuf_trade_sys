@@ -17,7 +17,7 @@ class KufarItemsAdmin(admin.ModelAdmin):
     class Meta:
         model = KufarItems
 
-    list_display = ('title', 'base_price', 'new_price', 'country', 'date',
+    list_display = ('title', 'base_price', 'new_price', 'city', 'date',
                     'time_create', 'time_update', 'deleted', 'cat', 'url')
 
 

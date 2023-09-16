@@ -14,7 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from parser.views import index, parse_pages
+from parser.views import index, parse_pages, search_list_items
 
 from bot.views import bot_config
 
@@ -26,5 +26,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='home'),
     path('parser/', parse_pages, name='parse_pages'),
-    path('bot/', bot_config, name='bot_config')
+    path('bot/', bot_config, name='bot_config'),
+    path('list/', search_list_items, name='search_list_items')
 ]

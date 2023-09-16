@@ -6,12 +6,12 @@ class KufarItems(models.Model):
     base_price = models.IntegerField(verbose_name="Стартовая цена")
     new_price = models.IntegerField(default=0, verbose_name="Новая цена")
     title = models.CharField(max_length=100, verbose_name="Название")
-    country = models.CharField(max_length=20, verbose_name="Город")
+    city = models.CharField(max_length=20, verbose_name="Город")
     date = models.CharField(max_length=20, verbose_name="Дата создания, обновления")
     url = models.CharField(max_length=200, verbose_name="Ссылка")
     time_create = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     time_update = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
-    deleted = models.BooleanField(default=False)
+    deleted = models.BooleanField(default=False, verbose_name="Продано или нет")
     cat = models.ForeignKey('Category', default=0, on_delete=models.PROTECT, verbose_name="Категория")
 
     def __str__(self):
