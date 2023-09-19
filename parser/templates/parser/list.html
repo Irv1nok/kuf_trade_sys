@@ -3,7 +3,7 @@
 
 
 {% block title %}
-<link rel="stylesheet" href="{% static 'css/stylesheet.css'%}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/stylesheet.css' %}" type="text/css">
 <div class="table-wrapper-scroll-y my-custom-scrollbar">
   <table class="table table-bordered table-striped mb-0">
       <thead>
@@ -36,7 +36,7 @@
 
  <ul class="pagination justify-content-center flex-wrap mt-2 mb-4">
     {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ view.urlencode_filter }}">&laquo;</a></li>
     {% else %}
         <li class="disabled page-item"><span class="page-link">&laquo;</span></li>
     {% endif %}
@@ -46,12 +46,12 @@
             </li>
         {% elif i >= page_obj.number|add:-2 and i <= page_obj.number|add:2  %}
 
-                <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                <li class="page-item"><a class="page-link" href="?page={{ i }}&{{ view.urlencode_filter }}">{{ i }}</a></li>
 
         {% endif %}
     {% endfor %}
     {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ view.urlencode_filter }}">&raquo;</a></li>
     {% else %}
         <li class="disabled page-item"><span class="page-link">&raquo;</span></li>
     {% endif %}

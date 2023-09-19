@@ -76,7 +76,7 @@ def parse_web_page(category: Dict[str, dict],
                     if not save_data(item_in_card, cat_id):  # Возвращается False если найден дубль.
                         double_item_count += 1
                         if double_item_count > 20:  # Если найдено больше 20 дублей в бд завершает работу
-                                return
+                            return
 
                 else:
                     update_data(item_in_card, cat_id)
@@ -123,13 +123,12 @@ def save_data(data: Dict[str, ...], cat_id: int):
     """Сохраняет распарсенные данные в бд"""
     res = convert_str_to_int(data)
     try:
-        obj = KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
-                                        city=res['city'], date=res['date'], url=res['url'], cat_id=cat_id)
+        KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
+                                  city=res['city'], date=res['date'], url=res['url'], cat_id=cat_id)
     except Exception as ex:
         logger.debug(f'Error in save_data func {ex}')
         return False
 
-    obj.save()
     logger.debug('save_success')
     return True
 
@@ -150,20 +149,6 @@ def update_data(data: Dict[str, ...], cat_id: int):
     obj.deleted = False
     obj.save(update_fields=['new_price', 'title', 'deleted'])
     logger.debug('updated')
-
-
-# def check_delete_or_sold_obj(cat_id: int):
-#     qs = KufarItems.objects.filter(cat_id=cat_id) & KufarItems.objects.filter(deleted=False)
-#     for q in qs:
-#         # sess = requests.Session()
-#         res = requests.get(q.url)
-#         print(res.status_code)
-#         if res.status_code == 404:
-#             q.deleted = True
-#             q.save()
-#             logger.debug('saved')
-#         logger.debug('pass')
-#         time.sleep(0.3)
 
 
 def start_chrome_driver():

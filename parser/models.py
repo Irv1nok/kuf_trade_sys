@@ -7,7 +7,7 @@ class KufarItems(models.Model):
     new_price = models.IntegerField(default=0, verbose_name="Новая цена")
     title = models.CharField(max_length=100, verbose_name="Название")
     city = models.CharField(max_length=20, verbose_name="Город")
-    date = models.CharField(max_length=20, verbose_name="Дата создания, обновления")
+    date = models.CharField(max_length=20, verbose_name="Дата создания, обновления в объявлении")
     url = models.CharField(max_length=200, verbose_name="Ссылка")
     time_create = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
     time_update = models.DateTimeField(auto_now=True, verbose_name="Время изменения")

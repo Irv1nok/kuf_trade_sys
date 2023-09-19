@@ -1,6 +1,6 @@
 import logging
 
-from django.core.paginator import Paginator
+from django.views.generic import ListView
 
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
@@ -8,53 +8,56 @@ from parser.services import parse_web_page
 
 from background_task import background
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
-QS_FILTERED_ITEMS = None
 
 
 def index(request):
     form = KufarItemsForm()
-    return render(request, 'index.html', {'form': form})
+    return render(request, 'parser/index.html', {'form': form})
 
 
-def search_list_items(request):
-    global QS_FILTERED_ITEMS
-    if request.GET.get('category'):
-        try:
-            category = int(request.GET.get('category'))
-        except ValueError:
-            return redirect('/')
-        title = request.GET.get('title', default=None)
-        city = request.GET.get('city', default=None)
-        pr_min = request.GET.get('price_min', default=None)
-        pr_max = request.GET.get('price_max', default=None)
-        deleted = request.GET.get('deleted')
+class Searchlist(ListView):
+    model = KufarItems
+    template_name = 'parser/list.html'
+    context_object_name = 'object'
+    paginate_by = 25
+    ordering = ['-date']
 
-        QS_FILTERED_ITEMS = KufarItems.objects.filter(cat_id=category)
-        if QS_FILTERED_ITEMS:
-            if title:
-                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(title__contains=title)
-            if city:
-                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(city__contains=city)
-            if pr_min:
-                try:
-                    QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(base_price__gte=int(pr_min))
-                except ValueError:
-                    pass
-            if pr_max:
-                try:
-                    QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(base_price__lte=int(pr_max))
-                except ValueError:
-                    pass
-            if deleted == 'on':
-                QS_FILTERED_ITEMS = QS_FILTERED_ITEMS.filter(deleted=True)
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category = self.request.GET.get('category', None)
+        title = self.request.GET.get('title', None)
+        city = self.request.GET.get('city', None)
+        pr_min = self.request.GET.get('price_min', None)
+        pr_max = self.request.GET.get('price_max', None)
+        deleted = self.request.GET.get('deleted', None)
+        queryset = KufarItems.objects.filter(cat_id=category)
+        if title:
+            queryset = queryset.filter(title__contains=title)
+        if city:
+            queryset = queryset.filter(city__contains=city)
+        if pr_min:
+            try:
+                queryset = queryset.filter(base_price__gte=int(pr_min))
+            except ValueError:
+                logger.error('wrong request price_min filter')
+                pass
+        if pr_max:
+            try:
+                queryset = queryset.filter(base_price__lte=int(pr_max))
+            except ValueError:
+                logger.error('wrong request price_max filter')
+                pass
+        if deleted == 'on':
+            queryset = queryset.filter(deleted=True)
+        return queryset
 
-    paginator = Paginator(QS_FILTERED_ITEMS.order_by('-date'), 25)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'list.html', {'page_obj': page_obj})
+    def urlencode_filter(self):
+        qd = self.request.GET.copy()
+        qd.pop(self.page_kwarg, None)
+        return qd.urlencode()
 
 
 # @background(schedule=10)
@@ -75,7 +78,7 @@ def parse_pages(request):
                 response = parse_web_page(category=cat.__dict__,
                                           cat_id=cat.id,
                                           test_conn=data['test_connect'])
-                return render(request, 'response.html', {'response': response})
+                return render(request, 'parser/response.html', {'response': response})
 
             elif not data['test_connect'] and not data['update_db']:
                 logger.debug('start parse_web_page')
@@ -89,6 +92,6 @@ def parse_pages(request):
 
     else:
         form = CategoriesForm()
-    return render(request, 'parser.html', {'form': form})
+    return render(request, 'parser/parser.html', {'form': form})
 
 
