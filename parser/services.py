@@ -1,5 +1,6 @@
 # import os
 # import pickle
+
 import logging
 import re
 import time
@@ -7,6 +8,7 @@ from parser.models import KufarItems
 from typing import Dict
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 
 from fake_useragent import UserAgent
 
@@ -15,6 +17,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 # def save_cookies(driver, category: str, accept_button_class: str):
@@ -124,8 +127,9 @@ def save_data(data: Dict[str, ...], cat_id: int):
     res = convert_str_to_int(data)
     try:
         KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
-                                  city=res['city'], date=res['date'], url=res['url'], cat_id=cat_id)
-    except Exception as ex:
+                                  city=res['city'], date=res['date'], time_update=timezone.now(),
+                                  url=res['url'], cat_id=cat_id)
+    except ObjectDoesNotExist as ex:
         logger.debug(f'Error in save_data func {ex}')
         return False
 
@@ -138,17 +142,21 @@ def update_data(data: Dict[str, ...], cat_id: int):
 
     try:
         obj = KufarItems.objects.get(id_item=res['id_item'])
-    except Exception:
+    except ObjectDoesNotExist as ex:
         save_data(data=data, cat_id=cat_id)
-        logger.debug('saved')
+        logger.debug(f'update_data except {ex}')
         return
 
     if not obj.base_price == res['price']:
         obj.new_price = res['price']
+        logger.debug('updated')
+
     obj.title = res['title']
+    obj.city = res['city']
+    obj.date = res['date']
     obj.deleted = False
-    obj.save(update_fields=['new_price', 'title', 'deleted'])
-    logger.debug('updated')
+    obj.time_update = timezone.now()
+    obj.save(update_fields=['new_price', 'title', 'city', 'date', 'time_update', 'deleted'])
 
 
 def start_chrome_driver():

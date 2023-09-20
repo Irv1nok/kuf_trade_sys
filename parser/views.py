@@ -11,6 +11,7 @@ from background_task import background
 from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def index(request):
@@ -18,15 +19,13 @@ def index(request):
     return render(request, 'parser/index.html', {'form': form})
 
 
-class Searchlist(ListView):
+class SearchItemsList(ListView):
     model = KufarItems
     template_name = 'parser/list.html'
     context_object_name = 'object'
     paginate_by = 25
-    ordering = ['-date']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
         category = self.request.GET.get('category', None)
         title = self.request.GET.get('title', None)
         city = self.request.GET.get('city', None)
@@ -51,8 +50,9 @@ class Searchlist(ListView):
                 logger.error('wrong request price_max filter')
                 pass
         if deleted == 'on':
-            queryset = queryset.filter(deleted=True)
-        return queryset
+            return queryset.filter(deleted=True).order_by('-date')
+        else:
+            return queryset.filter(deleted=False).order_by('time_update')
 
     def urlencode_filter(self):
         qd = self.request.GET.copy()
@@ -63,7 +63,6 @@ class Searchlist(ListView):
 # @background(schedule=10)
 def update_db(cat: dict, cat_id: int):
     parse_web_page(category=cat, cat_id=cat_id, update_db=True)
-
 
 def parse_pages(request):
     if request.method == 'POST':

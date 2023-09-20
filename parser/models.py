@@ -10,7 +10,7 @@ class KufarItems(models.Model):
     date = models.CharField(max_length=20, verbose_name="Дата создания, обновления в объявлении")
     url = models.CharField(max_length=200, verbose_name="Ссылка")
     time_create = models.DateTimeField(auto_now_add=True, verbose_name="Время создания")
-    time_update = models.DateTimeField(auto_now=True, verbose_name="Время изменения")
+    time_update = models.DateTimeField(null=True, verbose_name="Время обновления")
     deleted = models.BooleanField(default=False, verbose_name="Продано или нет")
     cat = models.ForeignKey('Category', default=0, on_delete=models.PROTECT, verbose_name="Категория")
 

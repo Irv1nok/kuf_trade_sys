@@ -13,7 +13,7 @@
           <th scope="col">Новая Цена</th>
           <th scope="col">Город</th>
           <th scope="col">Дата</th>
-          <th scope="col">Дата создания в бд</th>
+          <th scope="col">Дата обновления в бд</th>
           <th scope="col">Продано</th>
         </tr>
       </thead>
@@ -26,7 +26,7 @@
           <td>{{ object.new_price }}</td>
           <td>{{ object.city }}</td>
           <td>{{ object.date }}</td>
-          <td>{{ object.time_create }}</td>
+          <td>{{ object.time_update }}</td>
           <td>{% if object.deleted %}Да{% else %}Нет{% endif %}</td>
         </tr>
       {% endfor %}

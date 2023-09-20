@@ -156,9 +156,14 @@ LOGGING = {
         }
     },
     "loggers": {
-        "django": {
+        "parser.services": {
             "handlers": ["console"],
-            "level": "WARNING",
+            "level": "DEBUG",
+            "filters": ["require_debug_true"],
+        },
+        "parser.views": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "filters": ["require_debug_true"],
         },
         "django.request": {
@@ -170,6 +175,6 @@ LOGGING = {
             "level": "WARNING",
             "handlers": ["console", "file"],
             "propagate": False,
-        },
-    },
+        }
+    }
 }
