@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'parser.apps.ParserConfig',
     'background_task',
+    'bot.apps.BotConfig',
 ]
 
 MIDDLEWARE = [

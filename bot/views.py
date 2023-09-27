@@ -1,6 +1,5 @@
-from django.shortcuts import render
+from django.http import HttpResponse
 
 
-# Create your views here.
 def bot_config(request):
-    pass
+    return HttpResponse('<h2>Бот запущен</h2>')

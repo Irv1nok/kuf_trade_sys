@@ -1,7 +1,4 @@
 import logging
-
-from django.views.generic import ListView
-
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
 from parser.services import parse_web_page
@@ -9,9 +6,10 @@ from parser.services import parse_web_page
 from background_task import background
 
 from django.shortcuts import render
+from django.views.generic import ListView
+
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def index(request):
@@ -26,29 +24,27 @@ class SearchItemsList(ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        category = self.request.GET.get('category', None)
-        title = self.request.GET.get('title', None)
-        city = self.request.GET.get('city', None)
-        pr_min = self.request.GET.get('price_min', None)
-        pr_max = self.request.GET.get('price_max', None)
         deleted = self.request.GET.get('deleted', None)
-        queryset = KufarItems.objects.filter(cat_id=category)
-        if title:
+        queryset = KufarItems.objects.filter(cat_id=self.request.GET.get('category', None))
+
+        if title := self.request.GET.get('title', None):
             queryset = queryset.filter(title__contains=title)
-        if city:
+
+        if city := self.request.GET.get('city', None):
             queryset = queryset.filter(city__contains=city)
-        if pr_min:
+
+        if pr_min := self.request.GET.get('price_min', None):
             try:
                 queryset = queryset.filter(base_price__gte=int(pr_min))
             except ValueError:
-                logger.error('wrong request price_min filter')
-                pass
-        if pr_max:
+                logger.error('wrong type request price_min')
+
+        if pr_max := self.request.GET.get('price_max', None):
             try:
                 queryset = queryset.filter(base_price__lte=int(pr_max))
             except ValueError:
-                logger.error('wrong request price_max filter')
-                pass
+                logger.error('wrong type request price_max')
+
         if deleted == 'on':
             return queryset.filter(deleted=True).order_by('-date')
         else:
@@ -60,9 +56,10 @@ class SearchItemsList(ListView):
         return qd.urlencode()
 
 
-# @background(schedule=10)
+@background(schedule=60)
 def update_db(cat: dict, cat_id: int):
     parse_web_page(category=cat, cat_id=cat_id, update_db=True)
+
 
 def parse_pages(request):
     if request.method == 'POST':
@@ -79,10 +76,10 @@ def parse_pages(request):
                                           test_conn=data['test_connect'])
                 return render(request, 'parser/response.html', {'response': response})
 
-            elif not data['test_connect'] and not data['update_db']:
-                logger.debug('start parse_web_page')
-                # Парсинг всех данных с сохранением в бд.
-                parse_web_page(category=cat.__dict__, cat_id=cat.id)
+            # elif not data['test_connect'] and not data['update_db']:
+            #     logger.debug('start parse_web_page')
+            #     # Парсинг всех данных с сохранением в бд.
+            #     parse_web_page(category=cat.__dict__, cat_id=cat.id)
 
             elif data['update_db'] and not data['test_connect']:
                 # Обновление данных в бд.

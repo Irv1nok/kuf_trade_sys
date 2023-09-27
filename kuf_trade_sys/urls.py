@@ -26,7 +26,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='home'),
     path('parser/', parse_pages, name='parse_pages'),
-    path('bot/', bot_config, name='bot_config'),
-    # path('list/', search_list_items, name='search_list_items')
-    path('list/', SearchItemsList.as_view(), name='search_items_list')
+    path('list/', SearchItemsList.as_view(), name='search_items_list'),
+    path('bot-config/', bot_config, name='bot_config')
 ]
