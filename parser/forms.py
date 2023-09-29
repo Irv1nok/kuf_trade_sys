@@ -4,7 +4,8 @@ from django import forms
 
 
 class CategoriesForm(forms.Form):
-    category = forms.ModelChoiceField(label='Категория', required=False,
+    category = forms.ModelChoiceField(label='Категория',
+                                      required=False,
                                       queryset=Category.objects.all(),
                                       widget=forms.Select(attrs={'class': 'form-control js-example-basic-single'}))
 
@@ -17,6 +18,7 @@ class CategoriesForm(forms.Form):
 
 class KufarItemsForm(forms.Form):
     category = forms.ModelChoiceField(label='Категория',
+                                      required=False,
                                       queryset=Category.objects.all(),
                                       widget=forms.Select(attrs={'class': 'form-control js-example-basic-single'}))
 

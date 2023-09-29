@@ -1,13 +1,10 @@
 import logging
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
-from parser.services import parse_web_page
+from parser.services import get_new_updates_in_categories, get_all_data_in_category, get_test_data
 
-from background_task import background
-
-from django.shortcuts import render
-from django.views.generic import ListView
-
+from django.shortcuts import render, redirect
+from django.views.generic import ListView, DetailView
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +43,9 @@ class SearchItemsList(ListView):
                 logger.error('wrong type request price_max')
 
         if deleted == 'on':
-            return queryset.filter(deleted=True).order_by('-date')
-        else:
-            return queryset.filter(deleted=False).order_by('time_update')
+            return queryset.filter(deleted=True).order_by('time_update')
+
+        return queryset.filter(deleted=False).order_by('time_update')
 
     def urlencode_filter(self):
         qd = self.request.GET.copy()
@@ -56,9 +53,9 @@ class SearchItemsList(ListView):
         return qd.urlencode()
 
 
-@background(schedule=60)
-def update_db(cat: dict, cat_id: int):
-    parse_web_page(category=cat, cat_id=cat_id, update_db=True)
+class ItemDetailView(DetailView):
+    model = KufarItems
+    template_name = 'parser/detail.html'
 
 
 def parse_pages(request):
@@ -67,27 +64,26 @@ def parse_pages(request):
         if form.is_valid():
             data = form.cleaned_data
             cat = data['category']
-            del cat.__dict__['_state']
+            if data['update_db'] and not data['test_connect']:  # Обновление данных в бд.
+                get_new_updates_in_categories(schedule=10, repeat=3000, priority=2)
+                return redirect('parse_pages')
 
-            if data['test_connect']:  # Тест возможности получения данных.
-                logger.debug('start test_connect')
-                response = parse_web_page(category=cat.__dict__,
-                                          cat_id=cat.id,
-                                          test_conn=data['test_connect'])
+            if not data['category']:
+                return render(request, 'parser/parser.html', {'form': form})
+
+            if data['test_connect'] and not data['update_db']:  # Тест возможности получения данных.
+                response = get_test_data(category=cat.__dict__,
+                                         cat_id=cat.id,
+                                         test_conn=data['test_connect'])
                 return render(request, 'parser/response.html', {'response': response})
 
-            # elif not data['test_connect'] and not data['update_db']:
-            #     logger.debug('start parse_web_page')
-            #     # Парсинг всех данных с сохранением в бд.
-            #     parse_web_page(category=cat.__dict__, cat_id=cat.id)
-
-            elif data['update_db'] and not data['test_connect']:
-                # Обновление данных в бд.
-                logger.debug('start update_db')
-                update_db(cat=cat.__dict__, cat_id=cat.id)
+            if not data['test_connect'] and not data['update_db']:
+                del cat.__dict__['_state']  # <-- Вызывает background tasks json data error.
+                get_all_data_in_category(category=cat.__dict__,
+                                         cat_id=cat.id,
+                                         schedule=10,
+                                         repeat=10800)  # Парсинг всех данных , schedule=10, repeat=10800
 
     else:
         form = CategoriesForm()
     return render(request, 'parser/parser.html', {'form': form})
-
-

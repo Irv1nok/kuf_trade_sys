@@ -6,6 +6,7 @@
 <!doctype html>
 {% load static %}
 <html lang="en" data-bs-theme="auto">
+<title>Главная страница</title>
   <head><script src="{% static 'assets/js/color-modes.js' %}"></script>
 
     <meta charset="utf-8">
@@ -172,34 +173,47 @@
 </svg>
 
 <main class="d-flex flex-nowrap">
-  <h1 class="visually-hidden">Sidebars examples</h1>
-
-  <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="width: 280px;">
-    <a href={% url 'home' %} class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-          <img src="{% static 'share_logo_new.png' %}" style="width:40%">
-      <span class="fs-5">Kufar administration</span>
+<div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="width: 260px;">
+    <a href={% url 'home' %} class="d-flex d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <span class="fs-4 text-center">Объявления kufar</span>
+        <img src="{% static 'share_logo_new.png' %}" style="width:30%">
     </a>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
-    <li class="nav-item">
+    <li class="nav-item" >
         <a href={% url "home" %} class="nav-link
-           {% if request.path == home_url %}active{% else %}text-white{% endif %}"aria-current="page">
+           {% if request.path == home_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#home"/></svg>
-          Объявления
+            Объявления
+        </a>
+      </li>
+      <li>
+        <a href={% url "bot_config" %} class="nav-link
+           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
+          Список подписок
         </a>
       </li>
       <li>
         <a href={% url "parse_pages" %} class="nav-link
-           {% if request.path == parse_pages_url %}active{% else %}text-white{% endif %}">
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
+            {% if request.path == parse_pages_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
           Управление парсером
         </a>
       </li>
       <li>
         <a href={% url "bot_config" %} class="nav-link
-           {% if request.path == bot_config_url %}active{% else %}text-white{% endif %}">
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
+           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
           Конфигурация бота
+        </a>
+      </li>
+
+      <li>
+        <a href={% url "bot_config" %} class="nav-link
+           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
+          О сервисе
         </a>
       </li>
     </ul>
@@ -210,14 +224,13 @@
         <strong>mdo</strong>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-        <li><a class="dropdown-item" href="#">New project...</a></li>
         <li><a class="dropdown-item" href="#">Settings</a></li>
         <li><a class="dropdown-item" href="#">Profile</a></li>
         <li><hr class="dropdown-divider"></li>
         <li><a class="dropdown-item" href="#">Sign out</a></li>
       </ul>
     </div>
-  </div>
+</div>
   <div class="b-example-divider b-example-vr"></div>
 
     <div class="container">
