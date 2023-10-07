@@ -30,16 +30,16 @@ def start_chrome_driver():
     options = webdriver.ChromeOptions()
     options.add_argument(f"--user-agent={useragent.random}")
     # options.headless = True  # Безоконный режим
-    options.add_argument("user-data-dir=C:\\profile")
+    options.add_argument("user-data-dir=./profile")
     options.add_argument("window-size=1920,1080")
     options.add_argument("start-maximized")
-    options.add_argument('--blink-settings=imagesEnabled=false')
+    options.add_argument("--blink-settings=imagesEnabled=false")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_argument("--disable-blink-features")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option("useAutomationExtension", False)
     # off errors in console
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
     # driver
     service = Service()
@@ -66,7 +66,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
     logger.debug('Finish get_all_data_in_category')
 
 
-def get_test_data(category: dict, cat_id: int, test_conn: bool = False):
+def get_test_data(category: dict, cat_id: int, test_conn: bool):
     driver = start_chrome_driver()
     return parse_web_page(driver=driver, category=category, cat_id=cat_id, test_conn=test_conn)
 
@@ -80,7 +80,7 @@ def save_cookies(driver, category: str, accept_button_class: str):
     except Exception as ex:
         logger.error(ex)
     finally:
-        pickle.dump(driver.get_cookies(), open("cookies", "wb"))
+        pickle.dump(driver.get_cookies(), open('cookies', 'wb'))
         logger.debug('save cookies success')
 
 
@@ -99,7 +99,8 @@ def parse_web_page(driver,
     if not update:
         if not cat.process_parse_url:
             driver.get(category['url'])
-            KufarItems.objects.filter(cat_id=cat_id).update(deleted=True)
+            if not test_conn:
+                KufarItems.objects.filter(cat_id=cat_id).update(deleted=True)
         else:
             driver.get(cat.process_parse_url)
             logger.debug('parse_web_page load process_parse_url')
@@ -107,7 +108,7 @@ def parse_web_page(driver,
         driver.get(category['url'])
 
     if os.path.exists('cookies'):
-        for cookie in pickle.load(open("cookies", "rb")):
+        for cookie in pickle.load(open('cookies', 'rb')):
             driver.add_cookie(cookie)
 
     driver.refresh()
@@ -116,12 +117,12 @@ def parse_web_page(driver,
         while True:
             time.sleep(1.2)
             soup = BeautifulSoup(driver.page_source, 'html.parser')
-            all_items = soup.find_all('a', class_=category["wrapper"])
+            all_items = soup.find_all('a', class_=category['wrapper'])
 
             for item in all_items[:-8]:
-                price = item.find('p', class_=category["price"]).text
-                title = item.find('h3', class_=category["title"]).text
-                city_date = item.find('div', class_=category["city_date"])
+                price = item.find('p', class_=category['price']).text
+                title = item.find('h3', class_=category['title']).text
+                city_date = item.find('div', class_=category['city_date'])
                 city = city_date.find('p').text
                 date = city_date.find('span').text
 
@@ -136,7 +137,7 @@ def parse_web_page(driver,
 
                 update_data(item_in_card, cat_id)
 
-            if not update:
+            if not update and not test_conn:
                 if first_page and not cat.process_parse_url:  # Переход на след. страницу.
                     logger.debug('First page Next Page')
                     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, category['next_page']))).click()

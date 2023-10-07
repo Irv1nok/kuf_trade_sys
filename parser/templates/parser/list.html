@@ -15,6 +15,7 @@
           <th scope="col">Дата</th>
           <th scope="col">Продано</th>
           <th scope="col">Дата обновления</th>
+          <th scope="col">Дата в бд</th>
           <th scope="col">Подписаться на обновление</th>
         </tr>
       </thead>
@@ -29,6 +30,7 @@
           <td>{{ object.date }}</td>
           <td>{% if object.deleted %}Да{% else %}Нет{% endif %}</td>
           <td>{{ object.time_update }}</td>
+          <td>{{ object.time_create }}</td>
           <td><a href="{{ object.get_absolute_url }}">Детали</a></td>
         </tr>
       {% endfor %}
