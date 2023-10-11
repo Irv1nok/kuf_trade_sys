@@ -14,6 +14,37 @@ def index(request):
     return render(request, 'parser/index.html', {'form': form})
 
 
+def parse_pages(request):
+    if request.method == 'POST':
+        form = CategoriesForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            cat = data['category']
+            if data['update_db'] and not data['test_connect']:  # Создать таску для получения обновлений всех категорий.
+                get_new_updates_in_categories(schedule=10, repeat=3000, priority=2)
+                return redirect('parse_pages')
+
+            if not data['category']:  # Проверяем наличие категории в запросе.
+                return render(request, 'parser/parser.html', {'form': form})
+
+            if data['test_connect'] and not data['update_db']:  # Тест возможности получения данных.
+                response = get_test_data(category=cat.__dict__,
+                                         cat_id=cat.id,
+                                         test_conn=data['test_connect'])
+                return render(request, 'parser/response.html', {'response': response})
+
+            if not data['test_connect'] and not data['update_db']:
+                del cat.__dict__['_state']  # <-- Вызывает background tasks json data error.
+                get_all_data_in_category(category=cat.__dict__,
+                                         cat_id=cat.id,
+                                         schedule=10,
+                                         repeat=10800)  # Парсинг всех данных , schedule=10, repeat=10800
+
+    else:
+        form = CategoriesForm()
+    return render(request, 'parser/parser.html', {'form': form})
+
+
 class SearchItemsList(ListView):
     model = KufarItems
     template_name = 'parser/list.html'
@@ -43,9 +74,9 @@ class SearchItemsList(ListView):
                 logger.error('wrong type request price_max')
 
         if deleted == 'on':
-            return queryset.filter(deleted=True).order_by('time_update')
+            return queryset.filter(deleted=True).order_by('-time_create')
 
-        return queryset.filter(deleted=False).order_by('time_update')
+        return queryset.filter(deleted=False).order_by('-date')
 
     def urlencode_filter(self):
         qd = self.request.GET.copy()
@@ -58,32 +89,4 @@ class ItemDetailView(DetailView):
     template_name = 'parser/detail.html'
 
 
-def parse_pages(request):
-    if request.method == 'POST':
-        form = CategoriesForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            cat = data['category']
-            if data['update_db'] and not data['test_connect']:  # Обновление данных в бд.
-                get_new_updates_in_categories(schedule=10, repeat=3000, priority=2)
-                return redirect('parse_pages')
 
-            if not data['category']:
-                return render(request, 'parser/parser.html', {'form': form})
-
-            if data['test_connect'] and not data['update_db']:  # Тест возможности получения данных.
-                response = get_test_data(category=cat.__dict__,
-                                         cat_id=cat.id,
-                                         test_conn=data['test_connect'])
-                return render(request, 'parser/response.html', {'response': response})
-
-            if not data['test_connect'] and not data['update_db']:
-                del cat.__dict__['_state']  # <-- Вызывает background tasks json data error.
-                get_all_data_in_category(category=cat.__dict__,
-                                         cat_id=cat.id,
-                                         schedule=10,
-                                         repeat=10800)  # Парсинг всех данных , schedule=10, repeat=10800
-
-    else:
-        form = CategoriesForm()
-    return render(request, 'parser/parser.html', {'form': form})

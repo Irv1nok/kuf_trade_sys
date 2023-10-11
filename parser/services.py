@@ -63,7 +63,7 @@ def get_new_updates_in_categories():
 def get_all_data_in_category(category: dict, cat_id: int):
     driver = start_chrome_driver()
     parse_web_page(driver=driver, category=category, cat_id=cat_id)
-    logger.debug('Finish get_all_data_in_category')
+    logger.debug(f'Finish get_all_data_in_category {category["name"]}')
 
 
 def get_test_data(category: dict, cat_id: int, test_conn: bool):
