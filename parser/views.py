@@ -38,7 +38,8 @@ def parse_pages(request):
                 get_all_data_in_category(category=cat.__dict__,
                                          cat_id=cat.id,
                                          schedule=10,
-                                         repeat=10800)  # Парсинг всех данных , schedule=10, repeat=10800
+                                         repeat=10800
+                                         )  # Парсинг всех данных , schedule=10, repeat=10800
 
     else:
         form = CategoriesForm()

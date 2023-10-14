@@ -211,6 +211,7 @@ def update_data(data: Dict[str, ...], cat_id: int):
         obj.new_price = res['price']
         logger.debug('update_data add new_price success')
 
+    obj.cat_id = cat_id
     obj.title = res['title']
     obj.city = res['city']
     obj.date = res['date']
