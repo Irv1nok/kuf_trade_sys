@@ -88,6 +88,3 @@ class SearchItemsList(ListView):
 class ItemDetailView(DetailView):
     model = KufarItems
     template_name = 'parser/detail.html'
-
-
-

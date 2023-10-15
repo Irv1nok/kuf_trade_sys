@@ -7,13 +7,16 @@ from telebot import TeleBot, types
 
 
 def start_bot():
-    cat = None
+    category = None
     bot = TeleBot(config('BOT_TOKEN'))
+    bot_sub_menu = ['Ноутбуки', 'Компьютеры', 'Мониторы', 'Телефоны', 'Планшеты', 'Процессоры', 'Оперативная память',
+                    'Материнские платы', 'Кулеры', 'Корпуса', 'Жесткие диски', 'Видеокарты', 'Блоки питания',
+                    'SSD']
 
     @bot.message_handler(commands=['start'])  # стартовая команда
     def start(message):
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton("Компьютерная техника 🖥")
+        btn1 = types.KeyboardButton('Компьютерная техника 🖥')
         btn2 = types.KeyboardButton('Телефоны и планшеты 📱')
         btn3 = types.KeyboardButton('Все для детей и мам 🛍')
         btn4 = types.KeyboardButton('Хобби, спорт и туризм 🎿')
@@ -32,14 +35,14 @@ def start_bot():
     def show_help(message):
         bot.send_message(message.from_user.id, text='Бот находится в стадии разработки,'
                                                     'в случае любых сложностей перезапустите бота.'
-                                                    '\nДля отслеживания изменений интересующих объявлений'
-                                                    'получите свой *ID*, и укажите его в разделе'
-                                                    '\nОбъявления->детали нужного объявления на сайте.',
+                                                    '\nДля отслеживания изменений интересующих объявлений '
+                                                    'получите свой *ID* и укажите его в разделе: '
+                                                    'Объявления -> детали, нужного объявления на сайте.',
                          parse_mode="Markdown")
 
     @bot.message_handler(content_types=['text'])
     def get_text_messages(message):
-        nonlocal cat
+        nonlocal category
         if message.text == 'Компьютерная техника 🖥':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             btn1 = types.KeyboardButton('Ноутбуки')
@@ -70,141 +73,27 @@ def start_bot():
             btn8 = types.KeyboardButton('Корпуса')
             btn9 = types.KeyboardButton('Жесткие диски')
             btn10 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10)
+            markup.row(btn1, btn2, btn3, btn4)
+            markup.row(btn5, btn6, btn7, btn8)
+            markup.row(btn9, btn10)
             bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
 
-        elif message.text == 'Ноутбуки':
-            cat = get_category_from_bd(message)
+        elif message.text in bot_sub_menu:
+            category = get_category_from_bd(message)
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Компьютеры':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Настроить фильтр')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Мониторы':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Настроить фильтр')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Телефоны':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Планшеты':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Процессоры':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Оперативная память':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Материнские платы':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Кулеры':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Корпуса':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Жесткие диски':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Видеокарты':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Блоки питания':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'SSD':
-            cat = get_category_from_bd(message)
-            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            btn1 = types.KeyboardButton('Показать новые объявления 🆕')
-            # btn2 = types.KeyboardButton('Далее ->')
-            btn3 = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn1, btn3)
-            bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-        elif message.text == 'Показать новые объявления 🆕':
-            count = bot.reply_to(message, 'Сколько объявлений показать? *Введите число:* 💬', parse_mode="Markdown")
-            bot.register_next_step_handler(count, get_query_params)
+            btn1 = types.KeyboardButton('5')
+            btn2 = types.KeyboardButton('10')
+            btn3 = types.KeyboardButton('15')
+            btn4 = types.KeyboardButton('20')
+            btn5 = types.KeyboardButton('🔙 Главное меню')
+            markup.add(btn1, btn2, btn3, btn4, btn5)
+            bot.send_message(message.from_user.id, 'Сколько объявлений показать?\nВыберите, или введите в чат *число:*',
+                             reply_markup=markup,
+                             parse_mode="Markdown")
+            bot.register_next_step_handler(message, get_query_params)
 
         elif message.text == '🔙 Главное меню':
-            cat = None
+            category = None
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             btn1 = types.KeyboardButton('Компьютерная техника 🖥')
             btn2 = types.KeyboardButton('Телефоны и планшеты 📱')
@@ -215,6 +104,9 @@ def start_bot():
             bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
 
     def get_query_params(message):
+        if message.text == '🔙 Главное меню':
+            get_text_messages(message)
+            return
         try:
             msg_count = int(message.text)
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
@@ -229,7 +121,7 @@ def start_bot():
     def get_query_data(message, msg_count):
         del_obj = True if message.text == 'Да' else False
 
-        query = KufarItems.objects.filter(cat_id=cat).filter(deleted=del_obj).order_by(
+        query = KufarItems.objects.filter(cat_id=category).filter(deleted=del_obj).order_by(
             '-date' if not del_obj else "-time_create")
         qs_generator = init_qs_generator(query)
         show_query_data(message, qs_generator, msg_count)
@@ -244,31 +136,32 @@ def start_bot():
             return
         count = 0
         while count != msg_count:
-            q = next(qs_generator)
-            new_price = ''
-            if q.new_price:
-                if q.new_price > q.base_price:
-                    new_price = f'{q.new_price} + 🔺'
-                else:
-                    new_price = f'{q.new_price} + ❗️ ⬇️ 🔥'
-            else:
-                new_price = 'Нет'
-
-            bot.send_message(message.from_user.id, f'<b>{q.title}</b>'
-                                                   f'\nСтартовая цена: {q.base_price}'
-                                                   f'\nНовая цена: {new_price}'
-                                                   f'\nГород: {q.city}'
-                                                   f'\nПродано: {"Да" if q.deleted else "Нет"}'
-                                                   f'\nДата в объявлении: {q.date}'
-                                                   f'\nСсылка: {q.url}',
-                             parse_mode='HTML')
+            query = next(qs_generator)
+            send_message(user_id=message.from_user_id, query=query)
             count += 1
-            sleep(0.3)
 
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         markup.add(f'Показать еще {msg_count} ?', '🔙 Главное меню')
         msg = bot.reply_to(message, 'Показать еще или вернуться в главное меню? 💬', reply_markup=markup)
         bot.register_next_step_handler(msg, show_query_data, qs_generator, msg_count)
+
+    def send_message(user_id, query):
+        if query.new_price:
+            if query.new_price > query.base_price:
+                new_price = f'{query.new_price} 🔺'
+            else:
+                new_price = f'{query.new_price} ❗️ ⬇️ 🔥'
+        else:
+            new_price = 'Нет'
+        bot.send_message(user_id, f'<b>{query.title}</b>'
+                                  f'\nСтартовая цена: {query.base_price}'
+                                  f'\nНовая цена: {new_price}'
+                                  f'\nГород: {query.city}'
+                                  f'\nПродано: {"Да" if query.deleted else "Нет"}'
+                                  f'\nДата в объявлении: {query.date}'
+                                  f'\nСсылка: {query.url}',
+                         parse_mode='HTML')
+        sleep(0.1)
 
     def get_category_from_bd(message):
         try:
@@ -276,6 +169,5 @@ def start_bot():
         except Category.DoesNotExist:
             bot.send_message(message.from_user.id, '*Упс, проблема с категорией* 💬', parse_mode="Markdown")
         return category.pk
-
 
     bot.polling(none_stop=True, interval=0)

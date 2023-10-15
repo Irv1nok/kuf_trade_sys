@@ -201,7 +201,7 @@ def update_data(data: Dict[str, ...], cat_id: int):
     res = convert_str_to_int(data)
 
     try:
-        obj = KufarItems.objects.get(id_item=res['id_item'])
+        obj = KufarItems.objects.get(id_item=res['id_item'], cat_id=cat_id)
     except ObjectDoesNotExist as ex:
         save_data(data=data, cat_id=cat_id)
         logger.debug(f'update_data except {ex}')
