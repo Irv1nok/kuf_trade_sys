@@ -4,7 +4,7 @@ from parser.models import Category, KufarItems
 categories = ('name', 'title', 'price', 'city_date', 'wrapper', 'next_page', 'url', 'accept_button', 'process_parse_url')
 
 
-class ParserAdmin(admin.ModelAdmin):
+class CategoryAdmin(admin.ModelAdmin):
     class Meta:
         model = Category
 
@@ -23,5 +23,5 @@ class KufarItemsAdmin(admin.ModelAdmin):
     list_filter = ('city', 'time_update', 'cat')
 
 
-admin.site.register(Category, ParserAdmin)
+admin.site.register(Category, CategoryAdmin)
 admin.site.register(KufarItems, KufarItemsAdmin)
