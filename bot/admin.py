@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from bot.models import BotUser, Items
+from bot.models import BotUser, FavoritesItems
 
 
 class BotUserAdmin(admin.ModelAdmin):
@@ -12,10 +12,10 @@ class BotUserAdmin(admin.ModelAdmin):
 
 class ItemsAdmin(admin.ModelAdmin):
     class Meta:
-        model = Items
-        list_display = ('pk_item', 'category',)
-        list_editable = ('pk_item', 'category',)
+        model = FavoritesItems
+        list_display = ('pk_item',)
+        list_editable = ('pk_item',)
 
 
 admin.site.register(BotUser, BotUserAdmin)
-admin.site.register(Items, ItemsAdmin)
+admin.site.register(FavoritesItems, ItemsAdmin)

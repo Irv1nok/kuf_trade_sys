@@ -3,7 +3,12 @@ import os
 import pickle
 import re
 import time
+
 from parser.models import Category, KufarItems
+
+from bot.models import FavoritesItems
+from bot.services import send_message
+
 from background_task import background
 
 from typing import Dict
@@ -56,14 +61,14 @@ def get_new_updates_in_categories():
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id)
     driver.close()
     driver.quit()
-    logger.debug('Finish get_new_updates_in_categories')
+    logger.info('Finish get_new_updates_in_categories')
 
 
 @background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
     driver = start_chrome_driver()
     parse_web_page(driver=driver, category=category, cat_id=cat_id)
-    logger.debug(f'Finish get_all_data_in_category {category["name"]}')
+    logger.info(f'Finish get_all_data_in_category {category["name"]}')
 
 
 def get_test_data(category: dict, cat_id: int, test_conn: bool):
@@ -81,7 +86,7 @@ def save_cookies(driver, category: str, accept_button_class: str):
         logger.error(ex)
     finally:
         pickle.dump(driver.get_cookies(), open('cookies', 'wb'))
-        logger.debug('save cookies success')
+        logger.info('save cookies success')
 
 
 def parse_web_page(driver,
@@ -103,7 +108,7 @@ def parse_web_page(driver,
                 KufarItems.objects.filter(cat_id=cat_id).update(deleted=True)
         else:
             driver.get(cat.process_parse_url)
-            logger.debug('parse_web_page load process_parse_url')
+            logger.info('parse_web_page load process_parse_url')
     else:
         driver.get(category['url'])
 
@@ -125,13 +130,18 @@ def parse_web_page(driver,
                 city_date = item.find('div', class_=category['city_date'])
                 city = city_date.find('p').text
                 date = city_date.find('span').text
+                try:
+                    photo = item.find('div', class_='styles_container__dR7XZ').find('img').get('data-src')
+                except Exception:
+                    photo = None
 
                 item_in_card = {'price': price,
                                 'title': title,
                                 'city': city,
                                 'date': date,
                                 'url': item.get('href'),
-                                'id_item': re.search("\d{8,}", item.get("href")).group()}
+                                'id_item': re.search("\d{8,}", item.get("href")).group(),
+                                'photo': photo}
                 if test_conn:
                     return item_in_card
 
@@ -139,11 +149,11 @@ def parse_web_page(driver,
 
             if not update and not test_conn:
                 if first_page and not cat.process_parse_url:  # Переход на след. страницу.
-                    logger.debug('First page Next Page')
+                    logger.info('First page Next Page')
                     WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, category['next_page']))).click()
                     first_page = False
                 else:
-                    logger.debug('Next Page')
+                    logger.info('Next Page')
                     # назад и вперед одинаковые классы, берем второй
                     next_page = WebDriverWait(driver, 10).until(
                         EC.visibility_of_all_elements_located((By.XPATH, category['next_page'])))
@@ -188,12 +198,12 @@ def save_data(data: Dict[str, ...], cat_id: int):
     res = convert_str_to_int(data)
     try:
         KufarItems.objects.create(id_item=res['id_item'], title=res['title'], base_price=res['price'],
-                                  city=res['city'], date=res['date'], url=res['url'], cat_id=cat_id)
+                                  city=res['city'], date=res['date'], url=res['url'], photo_url=res['photo'], cat_id=cat_id)
     except Exception as ex:
         logger.debug(f'Error in save_data func {ex}')
         return False
 
-    logger.debug('save_data success')
+    logger.info('save_data success')
     return True
 
 
@@ -207,16 +217,25 @@ def update_data(data: Dict[str, ...], cat_id: int):
         logger.debug(f'update_data except {ex}')
         return
 
-    if not obj.base_price == res['price']:
+    if not obj.base_price == res['price'] and not obj.new_price == res['price']:
         obj.new_price = res['price']
-        logger.debug('update_data add new_price success')
+        logger.info('update_data save new_price')
 
     obj.title = res['title']
     obj.city = res['city']
     obj.date = res['date']
     obj.deleted = False
     obj.time_update = timezone.now()
+    obj.photo_url = res['photo']
     obj.save()
-    logger.debug('update_data save success')
+    try:
+        if obj.in_favorites:
+            for pk in FavoritesItems.objects.filter(pk_item=obj.pk):
+                # Отправляем сообщения всем пользователям у кого данный товар в избранном.
+                send_message(pk.bot_user.telegram_id, item=obj, user_registered=False, update_message=True)
+                logger.info('send_message success in update_data func')
+    except Exception as ex:
+        logger.error(f'update data send_message except {ex}')
+    logger.info('update_data save success')
 
 

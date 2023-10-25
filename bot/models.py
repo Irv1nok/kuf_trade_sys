@@ -13,7 +13,7 @@ class BotUser(models.Model):
         verbose_name_plural = 'ID пользователей'
 
 
-class Items(models.Model):
+class FavoritesItems(models.Model):
     bot_user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True)
     pk_item = models.IntegerField(unique=True)
 
