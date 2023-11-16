@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'parser.apps.ParserConfig',
     'background_task',
     'bot.apps.BotConfig',
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'kuf_trade_sys.urls'
@@ -80,9 +82,12 @@ WSGI_APPLICATION = 'kuf_trade_sys.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config("DB_NAME"),
+        'USER': config("DB_USER"),
+        'PASSWORD': config("DB_PASSWORD"),
+        'HOST': config("DB_HOST"),
+        'PORT': config("DB_PORT")}
 }
 
 
@@ -128,7 +133,9 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static'), ]
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -145,12 +152,12 @@ LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "DEBUG",
+            "level": config("DJANGO_LOG_LEVEL_CONSOLE"),
             "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
         },
         "file": {
-            "level": "DEBUG",
+            "level": "ERROR",
             "class": "logging.FileHandler",
             "formatter": "verbose",
             "filename": BASE_DIR.joinpath("log/application.log"),
@@ -173,7 +180,7 @@ LOGGING = {
             "propagate": False,
         },
         "django.db.backends": {
-            "level": "WARNING",
+            "level": "ERROR",
             "handlers": ["console", "file"],
             "propagate": False,
         }

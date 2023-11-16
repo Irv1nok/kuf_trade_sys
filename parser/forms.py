@@ -27,6 +27,7 @@ class KufarItemsForm(forms.Form):
                             required=False,
                             widget=forms.TextInput(attrs={'class': 'form-control'}),
                             help_text='Введите название товара')
+
     city = forms.CharField(label='Город',
                            max_length=10,
                            required=False,

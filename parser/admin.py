@@ -1,7 +1,8 @@
 from django.contrib import admin
 from parser.models import Category, KufarItems
 
-categories = ('name', 'title', 'price', 'city_date', 'wrapper', 'next_page', 'url', 'accept_button', 'process_parse_url')
+categories = ('name', 'title', 'price', 'city_date', 'wrapper', 'next_page', 'url',
+              'accept_button', 'photo', 'count_ads', 'count_ad', 'process_parse_url',)
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -17,7 +18,7 @@ class KufarItemsAdmin(admin.ModelAdmin):
     class Meta:
         model = KufarItems
 
-    list_display = ('title', 'base_price', 'new_price', 'city', 'date',
+    list_display = ('id_item', 'title', 'base_price', 'new_price', 'city', 'date',
                     'time_create', 'time_update', 'deleted', 'cat', 'url')
 
     list_filter = ('city', 'time_update', 'cat')

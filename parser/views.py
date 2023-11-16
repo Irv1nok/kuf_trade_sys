@@ -21,7 +21,7 @@ def parse_pages(request):
             data = form.cleaned_data
             cat = data['category']
             if data['update_db'] and not data['test_connect']:  # Создать таску для получения обновлений всех категорий.
-                get_new_updates_in_categories(schedule=10, repeat=3000, priority=2)
+                get_new_updates_in_categories(schedule=10, repeat=1800, priority=2)
                 return redirect('parse_pages')
 
             if not data['category']:  # Проверяем наличие категории в запросе.
@@ -38,7 +38,7 @@ def parse_pages(request):
                 get_all_data_in_category(category=cat.__dict__,
                                          cat_id=cat.id,
                                          schedule=10,
-                                         repeat=10800
+                                         repeat=14400
                                          )  # Парсинг всех данных , schedule=10, repeat=10800
 
     else:

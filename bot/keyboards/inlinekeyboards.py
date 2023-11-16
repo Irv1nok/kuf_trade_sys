@@ -18,6 +18,7 @@ def inline_keyboard_title_notebooks():
     markup_inline.add(bk1, bk2, bk3, bk4, bk5, bk6, bk7, bk8, bk9, bk10, bk11, bk12)
     return markup_inline
 
+
 def inline_keyboard_title_telephones():
     markup_inline = types.InlineKeyboardMarkup()
     bk1 = types.InlineKeyboardButton(text='ASUS', callback_data='title|Телефоны|ASUS')
@@ -67,4 +68,11 @@ def inline_keyboard_city():
     bk9 = types.InlineKeyboardButton(text='Витебск', callback_data='city|Витебск,')
     bk10 = types.InlineKeyboardButton(text='Витебская обл', callback_data='city|Витебская')
     markup_inline.add(bk1, bk2, bk3, bk4, bk5, bk6, bk7, bk8, bk9, bk10)
+    return markup_inline
+
+
+def inline_keyboard_delete_search_item(obj):
+    markup_inline = types.InlineKeyboardMarkup()
+    btn1 = types.InlineKeyboardButton(text='Удалить из поиска', callback_data=f'search|delete|{obj}')
+    markup_inline.add(btn1)
     return markup_inline
