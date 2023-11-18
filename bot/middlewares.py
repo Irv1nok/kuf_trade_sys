@@ -38,27 +38,35 @@ def get_query(message):
 
     elif message.text == 'Поиск по фильтру':
         markup_inline = keyboards_cats[user_data.category]
-        bot.send_message(message.from_user.id, '💬 *Введите* yазвание товара или выберите.',
+        bot.send_message(message.from_user.id, '💬 *Введите* название товара или выберите.',
                          reply_markup=markup_inline, parse_mode='Markdown')
         markup = reply_keyboard_with_gen_menu_and_next()
         bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
 
-    elif message.text == 'Задать поиск по параметрам':
+    elif message.text == 'Задать автоматический поиск по параметрам':
         markup = reply_keyboard_gen_menu()
         user = BotUser.objects.get(telegram_id=message.from_user.id)
-        if user.slots_for_searchitems > 0:
-            user_data.search_item = True
-            markup_inline = keyboards_cats[user_data.category]
-            bot.send_message(message.from_user.id, '💬 Введите *название* товара или выберите.',
-                             reply_markup=markup_inline, parse_mode='Markdown')
-            markup = reply_keyboard_with_gen_menu_and_next()
-            bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
-                             reply_markup=markup, parse_mode='Markdown')
-            bot.register_next_step_handler(message, get_title)
+        if user_data.user_registered:
+            if user.slots_for_searchitems > 0:
+                user_data.search_item = True
+                markup_inline = keyboards_cats[user_data.category]
+                bot.send_message(message.from_user.id, '💬 Введите *название* товара или выберите.',
+                                 reply_markup=markup_inline, parse_mode='Markdown')
+                markup = reply_keyboard_with_gen_menu_and_next()
+                bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
+                                 reply_markup=markup, parse_mode='Markdown')
+                bot.register_next_step_handler(message, get_title)
+            else:
+                return bot.send_message(message.from_user.id, 'У вас закончились слоты для поиска', reply_markup=markup)
         else:
-            return bot.send_message(message.from_user.id, 'У вас закончились слоты для поиска', reply_markup=markup)
+            return bot.send_message(message.from_user.id, 'Вы не зарегестрированы 👈', reply_markup=markup)
+    elif message.text:
+        markup = reply_keyboard_gen_menu()
+        bot.register_next_step_handler(message, get_query)
+        return bot.send_message(message.from_user.id, 'Такой команды нет,'
+                                                      ' 👀 Выберите интересующий вас раздел', reply_markup=markup)
 
     elif message.text == 'Показать объявления':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -214,8 +222,9 @@ def query_data(message, qs_generator):
             count += 1
             time.sleep(0.2)
         except StopIteration:
-            bot.send_message(message.from_user.id, '💬 Нет объявлений 👀',
+            bot.send_message(message.from_user.id, '💬 Больше нет объявлений 👀',
                              reply_markup=reply_keyboard_back_gen_menu())
+            return
 
         except Exception as ex:
             logger.error(f'Exception - {ex} in query_data')

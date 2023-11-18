@@ -59,13 +59,13 @@ def inline_keyboard_city():
     markup_inline.row_width = 2
     bk1 = types.InlineKeyboardButton(text='Минск', callback_data='city|Минск,')
     bk2 = types.InlineKeyboardButton(text='Минская обл.', callback_data='city|Минская')
-    bk3 = types.InlineKeyboardButton(text='Брест', callback_data='city|Брест,')
+    bk3 = types.InlineKeyboardButton(text='Брест', callback_data='city|Брест')
     bk4 = types.InlineKeyboardButton(text='Брестская обл.', callback_data='city|Брестская')
-    bk5 = types.InlineKeyboardButton(text='Гродно', callback_data='city|Гродно,')
+    bk5 = types.InlineKeyboardButton(text='Гродно', callback_data='city|Гродно')
     bk6 = types.InlineKeyboardButton(text='Гродненская обл.', callback_data='city|Гродненская')
-    bk7 = types.InlineKeyboardButton(text='Могилев', callback_data='city|Могилев,')
+    bk7 = types.InlineKeyboardButton(text='Могилев', callback_data='city|Могилев')
     bk8 = types.InlineKeyboardButton(text='Могилевская обл.', callback_data='city|Могилевская')
-    bk9 = types.InlineKeyboardButton(text='Витебск', callback_data='city|Витебск,')
+    bk9 = types.InlineKeyboardButton(text='Витебск', callback_data='city|Витебск')
     bk10 = types.InlineKeyboardButton(text='Витебская обл', callback_data='city|Витебская')
     markup_inline.add(bk1, bk2, bk3, bk4, bk5, bk6, bk7, bk8, bk9, bk10)
     return markup_inline

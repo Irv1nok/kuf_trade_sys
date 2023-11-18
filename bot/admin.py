@@ -3,8 +3,6 @@ from bot.models import BotUser, FavoritesItems, SearchItems
 from django.contrib import admin
 
 
-
-
 class BotUserAdmin(admin.ModelAdmin):
     class Meta:
         model = BotUser

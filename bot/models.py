@@ -16,7 +16,7 @@ class BotUser(models.Model):
 
 
 class FavoritesItems(models.Model):
-    bot_user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True)
+    bot_user = models.ForeignKey('BotUser', on_delete=models.CASCADE)
     pk_item = models.IntegerField(unique=True)
 
     def __str__(self):
@@ -28,8 +28,8 @@ class FavoritesItems(models.Model):
 
 
 class SearchItems(models.Model):
-    bot_user = models.ForeignKey(BotUser, on_delete=models.CASCADE, null=True, blank=True)
-    category = models.IntegerField(null=True, blank=True)
+    bot_user = models.ForeignKey('BotUser', on_delete=models.CASCADE)
+    category = models.IntegerField(null=True)
     title = models.CharField(max_length=100, null=True, blank=True, verbose_name='Название')
     min_price = models.PositiveIntegerField(null=True, blank=True)
     max_price = models.PositiveIntegerField(null=True, blank=True)

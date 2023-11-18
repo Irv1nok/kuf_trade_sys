@@ -1,4 +1,5 @@
 import logging
+
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
 from parser.services import get_new_updates_in_categories, get_all_data_in_category, get_test_data
@@ -37,7 +38,7 @@ def parse_pages(request):
                 del cat.__dict__['_state']  # <-- Вызывает background tasks json data error.
                 get_all_data_in_category(category=cat.__dict__,
                                          cat_id=cat.id,
-                                         schedule=10,
+                                         schedule=20,
                                          repeat=14400
                                          )  # Парсинг всех данных , schedule=10, repeat=10800
 

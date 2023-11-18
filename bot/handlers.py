@@ -1,5 +1,6 @@
 import logging
 from collections import Counter
+
 from django.db import IntegrityError
 from parser.models import Category, KufarItems
 
@@ -65,9 +66,18 @@ def show_favorites(message):
 @bot.message_handler(commands=['register'])
 def register_user(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    try:
-        if not BotUser.objects.get(telegram_id=message.from_user.id):
+    if not user_data.user_registered:
+        try:
+            BotUser.objects.get(telegram_id=message.from_user.id)
+            btn = types.KeyboardButton('🔙 Главное меню')
+            markup.add(btn)
+            bot.send_message(chat_id=message.from_user.id,
+                             text='💬 Вы уже зарегестрированы 👍'
+                                  '\nЕсли вы видите это сообщение после регистрации,'
+                                  '\n*перезапустите бота* в меню комманд /start 🆙',
+                             reply_markup=markup,
+                             parse_mode='Markdown')
+        except Exception:
             bot.send_message(message.from_user.id, text='💬 Здорово!👏 Я рад что вы решили зарегестрироваться. '
                                                         'Это позволит вам добавлять товары в избранное, '
                                                         'а я буду следить за этими товарами и если '
@@ -79,19 +89,9 @@ def register_user(message):
             markup.add('Да', 'Нет')
             bot.send_message(message.from_user.id, '💬 Зарегестрироваться? ', reply_markup=markup, parse_mode='HTML')
             bot.register_next_step_handler(message, register_user_step2)
-        else:
-            btn = types.KeyboardButton('🔙 Главное меню')
-            markup.add(btn)
-            bot.send_message(chat_id=message.from_user.id,
-                             text='💬 Вы уже зарегестрированы 👍'
-                                  '\nЕсли вы видите это сообщение после регистрации,'
-                                  '\n*перезапустите бота* в меню комманд /start 🆙',
-                             reply_markup=markup,
-                             parse_mode='Markdown')
-    except Exception as ex:
-        logger.error(f'Error --{ex}-- in register_user')
-        bot.send_message(message.from_user.id, text='💬 Ошибка! 😔 Попробуйте еще раз.'
-                                                    '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help')
+    else:
+        bot.send_message(chat_id=message.from_user.id,
+                         text='💬 Вы уже зарегестрированы 👍')
 
 
 def register_user_step2(message):
@@ -101,7 +101,7 @@ def register_user_step2(message):
                                                     '\nПерезапускаю бота..'
                                                     '\nВозвращаю в главное меню. 🔙 ')
     except Exception as ex:
-        logger.error(f'Error --{ex}-- in register_user_step2')
+        logger.exception(f'Error --{ex}-- in register_user_step2')
         bot.send_message(message.from_user.id, text='💬 Ошибка! 😔 Попробуйте еще раз.'
                                                     '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help'
                                                     '\nВозвращаю в главное меню. 🔙 ')
@@ -158,7 +158,7 @@ def search_items(message):
             bot.send_message(message.from_user.id, '💬 Ошибка! 😔 Попробуйте еще раз.'
                                                    '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help',
                              reply_markup=markup)
-            logger.error(f'Error --{ex}-- in search_items handler')
+            logger.exception(f'Error --{ex}-- in search_items handler')
 
 
 @bot.message_handler(commands=['help'])
@@ -228,7 +228,7 @@ def get_text_messages(message):
         btn1 = types.KeyboardButton('Показать объявления')
         btn2 = types.KeyboardButton('Поиск по фильтру')
         btn3 = types.KeyboardButton('Показать проданные объявления')
-        btn4 = types.KeyboardButton('Задать поиск по параметрам')
+        btn4 = types.KeyboardButton('Задать автоматический поиск по параметрам')
         btn5 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2)
         markup.row(btn3, btn4)
@@ -273,7 +273,7 @@ def callback_favorites_inline(call):
                                  text='💬 Ошибка!. Попробуйте еще раз.'
                                       '\nВозможно у вас закончились свободные слоты.'
                                       '\nЕсли ошибка повториться свяжитесь с разработчиком. /help')
-                logger.error(f'{ex} in callback_favorites func')
+                logger.exception(f'{ex} in callback_favorites func')
 
         elif op == 'add' and user.slots_for_favitems == 0:
             bot.send_message(chat_id=call.from_user.id,
@@ -283,7 +283,6 @@ def callback_favorites_inline(call):
         elif op == 'delete':
             try:
                 item = FavoritesItems.objects.get(pk_item=int(pk))
-                user.favoritesitems_set.remove(item)
                 item.delete()
                 user.slots_for_favitems += 1
                 user.save(update_fields=['slots_for_favitems'])
@@ -339,7 +338,7 @@ def get_category_from_bd(message):
         return category.pk
     except Category.DoesNotExist as ex:
         bot.send_message(message.from_user.id, '💬 *Упс, проблема с категорией* 💬', parse_mode="Markdown")
-        logger.error(f'{ex} in get_category_from_bd')
+        logger.exception(f'{ex} in get_category_from_bd')
 
 
 bot_command_menu = {'/start': start, '/favorites': show_favorites, '/register': register_user,

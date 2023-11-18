@@ -41,8 +41,7 @@ class Category(models.Model):
                                          help_text='Ссылка на предыдущую страницу в драйвере парсера')
     name = models.CharField(max_length=50, verbose_name='Название')
     count_ad = models.IntegerField(default=0)
-    count_ads = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс кнопки кол. объявлений')
-
+    count_ads = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс количества объявлений')
     def __str__(self):
         return self.name
 

@@ -122,20 +122,23 @@ def parse_web_page(driver,
 
     driver.refresh()
 
-    WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.XPATH, category['count_ads'])))
+    if not update:
+        WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, category['count_ads'])))
+        try:
+            res = driver.find_element(
+                By.XPATH, category['count_ads']).text
+            res1 = ''.join(res.split()[:-1])
+            count_ads = int(res1)
+        except Exception as ex:
+            logger.error(f'Exception in parse_web_page while {ex}')
+            raise Exception
+
     try:
         while True:
             time.sleep(0.5)
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             all_items = soup.find_all('a', class_=category['wrapper'])
-            try:
-                res = soup.find('span', class_='styles_counter__NSFh7').text
-                res1 = ''.join(res.split()[:-1])
-                count_ads = int(res1)
-            except Exception as ex:
-                logger.error(f'Exception in parse_web_page while {ex}')
-                raise Exception
 
             for item in all_items[:-8 if cat_id not in no_advertising_cats else None]:
                 price = item.find('p', class_=category['price']).text
@@ -186,7 +189,6 @@ def parse_web_page(driver,
                     cat.process_parse_url = driver.current_url
                     cat.count_ad = count_ad
                     cat.save(update_fields=['process_parse_url', 'count_ad'])
-
                     next_page[1].click()  # Raise IndexError когда доходит до последней страницы
                     # назад и вперед одинаковые классы, берем второй
                     logger.info('Next Page')
@@ -277,11 +279,14 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
 
 def update_sold_items_in_category(cat_id: int):
     delta = timezone.now() - timedelta(hours=6)
-    qs = (KufarItems.objects.filter(cat_id=cat_id,
+    qs1 = KufarItems.objects.filter(cat_id=cat_id,
                                     deleted=False,
-                                    time_update__lt=delta) & KufarItems.objects.filter(cat_id=cat_id,
-                                                                                       deleted=False,
-                                                                                       time_update__isnull=True))
+                                    time_update__lt=delta)
+    qs2 = KufarItems.objects.filter(cat_id=cat_id,
+                                    deleted=False,
+                                    time_create__lt=delta,
+                                    time_update__isnull=True)
+    qs = qs1 | qs2
     if qs.exists():
         send_users_msg_sold_items(qs)
         qs.update(deleted=True)
