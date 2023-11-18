@@ -1,9 +1,11 @@
 import logging
 import time
 
-from bot.bot_config import user_data, keyboards_cats, bot
-from bot.models import BotUser
 from parser.models import KufarItems
+
+from bot.bot_config import bot, keyboards_cats, user_data
+from bot.models import BotUser
+from bot.services import send_error_msg_not_registered
 
 from bot.keyboards.inlinekeyboards import inline_keyboard_city
 from bot.keyboards.replykeyoboards import (reply_keyboard_back_gen_menu,
@@ -61,12 +63,7 @@ def get_query(message):
             else:
                 return bot.send_message(message.from_user.id, 'У вас закончились слоты для поиска', reply_markup=markup)
         else:
-            return bot.send_message(message.from_user.id, 'Вы не зарегестрированы 👈', reply_markup=markup)
-    elif message.text:
-        markup = reply_keyboard_gen_menu()
-        bot.register_next_step_handler(message, get_query)
-        return bot.send_message(message.from_user.id, 'Такой команды нет,'
-                                                      ' 👀 Выберите интересующий вас раздел', reply_markup=markup)
+            return send_error_msg_not_registered(message)
 
     elif message.text == 'Показать объявления':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -82,6 +79,14 @@ def get_query(message):
                          reply_markup=markup,
                          parse_mode="Markdown")
         bot.register_next_step_handler(message, get_message_quantity)
+
+    elif message.text:
+        markup = reply_keyboard_gen_menu()
+        bot.register_next_step_handler(message, get_query)
+        return bot.send_message(message.from_user.id, 'Такой команды нет,'
+                                                      ' 👀 Выберите интересующий вас раздел', reply_markup=markup)
+
+
 
 
 def get_title(message):
