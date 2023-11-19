@@ -25,6 +25,7 @@ class UserData:
         self.category: int = None
         self.user_registered: bool = False
         self.search_item: bool = False
+        self.check_price: bool = False
 
     def reset_data(self):
         self.deleted = False
@@ -34,6 +35,7 @@ class UserData:
         self.city = None
         self.msg_quantity = 0
         self.search_item = False
+        self.check_price = False
 
 
 user_data = UserData()

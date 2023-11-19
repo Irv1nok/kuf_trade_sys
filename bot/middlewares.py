@@ -1,7 +1,7 @@
 import logging
 import time
 
-from parser.models import KufarItems
+from parser.models import Category, KufarItems
 
 from bot.bot_config import bot, keyboards_cats, user_data
 from bot.models import BotUser
@@ -9,16 +9,26 @@ from bot.services import send_error_msg_not_registered
 
 from bot.keyboards.inlinekeyboards import inline_keyboard_city
 from bot.keyboards.replykeyoboards import (reply_keyboard_back_gen_menu,
-                                           reply_keyboard_with_gen_menu_and_next,
-                                           reply_keyboard_gen_menu)
+                                           reply_keyboard_back_gen_menu_and_next,
+                                           reply_keyboard_gen_menu, reply_keyboard_back_gen_menu_and_repeat)
 
-from django.db.models import Q
+from django.db.models import Avg, Min, Max, Q
 
 from telebot import types
 
 from bot.services import send_message
 
 logger = logging.getLogger(__name__)
+
+
+def get_category_from_bd(message):
+    name, foo = message.text.split('.')
+    try:
+        category = Category.objects.get(name=name)
+        return category.pk
+    except Category.DoesNotExist as ex:
+        bot.send_message(message.from_user.id, 'Проблема с категорией* 💬', parse_mode="Markdown")
+        logger.exception(f'{ex} in get_category_from_bd')
 
 
 def get_query(message):
@@ -33,7 +43,7 @@ def get_query(message):
         markup_inline = keyboards_cats[user_data.category]
         bot.send_message(message.from_user.id, '💬 *Введите* название товара или *выберите*.',
                          reply_markup=markup_inline, parse_mode='Markdown')
-        markup = reply_keyboard_with_gen_menu_and_next()
+        markup = reply_keyboard_back_gen_menu_and_next()
         bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
@@ -42,13 +52,13 @@ def get_query(message):
         markup_inline = keyboards_cats[user_data.category]
         bot.send_message(message.from_user.id, '💬 *Введите* название товара или выберите.',
                          reply_markup=markup_inline, parse_mode='Markdown')
-        markup = reply_keyboard_with_gen_menu_and_next()
+        markup = reply_keyboard_back_gen_menu_and_next()
         bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
 
     elif message.text == 'Задать автоматический поиск по параметрам':
-        markup = reply_keyboard_gen_menu()
+        markup = reply_keyboard_back_gen_menu()
         user = BotUser.objects.get(telegram_id=message.from_user.id)
         if user_data.user_registered:
             if user.slots_for_searchitems > 0:
@@ -56,7 +66,7 @@ def get_query(message):
                 markup_inline = keyboards_cats[user_data.category]
                 bot.send_message(message.from_user.id, '💬 Введите *название* товара или выберите.',
                                  reply_markup=markup_inline, parse_mode='Markdown')
-                markup = reply_keyboard_with_gen_menu_and_next()
+                markup = reply_keyboard_back_gen_menu_and_next()
                 bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
                                  reply_markup=markup, parse_mode='Markdown')
                 bot.register_next_step_handler(message, get_title)
@@ -80,20 +90,47 @@ def get_query(message):
                          parse_mode="Markdown")
         bot.register_next_step_handler(message, get_message_quantity)
 
+    elif message.text == 'Узнать цену':
+        markup = reply_keyboard_back_gen_menu()
+        bot.send_message(message.from_user.id, 'Введите название товара', reply_markup=markup)
+        bot.register_next_step_handler(message, check_price_step2)
+
     elif message.text:
         markup = reply_keyboard_gen_menu()
-        bot.register_next_step_handler(message, get_query)
         return bot.send_message(message.from_user.id, 'Такой команды нет,'
                                                       ' 👀 Выберите интересующий вас раздел', reply_markup=markup)
 
 
+def check_price_step2(message):
+    markup = reply_keyboard_back_gen_menu()
+    if message.text == '🔙 Главное меню':
+        markup = reply_keyboard_gen_menu()
+        return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
+    if message.text:
+        user_data.title = message.text
+        user_data.check_price = True
+        user_data.min_price = 1
+        qs = get_query_data(message)
+        if qs.exists():
+            avg_price = qs.aggregate(Avg('base_price'))['base_price__avg']
+            min_price = qs.aggregate(Min('base_price'))['base_price__min']
+            max_price = qs.aggregate(Max('base_price'))['base_price__max']
+            bot.send_message(message.from_user.id, f'Статистика по вашему запросу: {user_data.title}'
+                                                   f'\nСредняя цена: {avg_price:0.2f}'
+                                                   f'\nМинимальная цена {min_price:0.2f}'
+                                                   f'\nМаксимальная цена: {max_price:0.2f}')
+
+    bot.send_message(message.from_user.id, 'Повторите ввод или назад в главное меню?', reply_markup=markup)
+    bot.register_next_step_handler(message, check_price_step2)
+            # for q in qs:
+            #     pass
 
 
 def get_title(message):
     if message.text == '🔙 Главное меню':
         markup = reply_keyboard_gen_menu()
         return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-    markup = reply_keyboard_with_gen_menu_and_next()
+    markup = reply_keyboard_back_gen_menu_and_next()
 
     if not message.text == 'Далее':
         if not len(message.text) > 30:
@@ -193,8 +230,13 @@ def get_message_quantity(message):
 
 
 def get_query_data(message):
-    qs = KufarItems.objects.filter(cat_id=user_data.category, deleted=user_data.deleted).order_by(
-        '-date' if not user_data.deleted else "-time_create")
+    if user_data.check_price:
+        qs = KufarItems.objects.filter(
+            cat_id=user_data.category,
+            base_price__gt=user_data.min_price)
+    else:
+        qs = KufarItems.objects.filter(cat_id=user_data.category, deleted=user_data.deleted).order_by(
+            '-date' if not user_data.deleted else "-time_create")
     filter_query = Q()
     if user_data.title:
         filter_query.add(Q(title__icontains=user_data.title), Q.AND)
@@ -204,10 +246,14 @@ def get_query_data(message):
         filter_query.add(Q(city__icontains=user_data.city), Q.AND)
     qs = qs.filter(filter_query)
 
-    qs_generator = init_qs_generator(qs)
-    markup = reply_keyboard_with_gen_menu_and_next()
+    markup = reply_keyboard_back_gen_menu_and_next() if not user_data.check_price else None
     bot.send_message(message.from_user.id, f'💬 Найдено {qs.count()} объявлений. 👀\n\n', reply_markup=markup)
-    bot.register_next_step_handler(message, query_data, qs_generator)
+
+    if not user_data.check_price:
+        qs_generator = init_qs_generator(qs)
+        bot.register_next_step_handler(message, query_data, qs_generator)
+    else:
+        return qs
 
 
 def query_data(message, qs_generator):
@@ -255,6 +301,7 @@ def save_search_data_in_db(message):
                                     city=user_data.city, category=user_data.category)
         user.slots_for_searchitems -= 1
         user.save(update_fields=['slots_for_searchitems'])
+        user_data.reset_data()
         return bot.send_message(message.from_user.id, '💬 Готово. Проверьте в меню команд. '
                                                       f'Доступно слотов {user.slots_for_searchitems}'
                                                       '\n/search', reply_markup=markup)

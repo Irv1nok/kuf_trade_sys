@@ -294,7 +294,6 @@ def update_sold_items_in_category(cat_id: int):
     else:
         logger.info('update_sold_items_in_category FALSE, no one obj in QuerySet')
 
-
 def send_users_msg_sold_items(qs):
     qs_fav = qs.filter(in_favorites=True)
     if qs_fav.exists():

@@ -1,5 +1,7 @@
 from telebot import types
 
+from bot.bot_config import user_data
+
 
 def reply_keyboard_back_gen_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -8,9 +10,17 @@ def reply_keyboard_back_gen_menu():
     return markup
 
 
-def reply_keyboard_with_gen_menu_and_next():
+def reply_keyboard_back_gen_menu_and_next():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Далее')
+    btn2 = types.KeyboardButton('🔙 Главное меню')
+    markup.row(btn1, btn2)
+    return markup
+
+
+def reply_keyboard_back_gen_menu_and_repeat():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('Повторить ввод?')
     btn2 = types.KeyboardButton('🔙 Главное меню')
     markup.row(btn1, btn2)
     return markup

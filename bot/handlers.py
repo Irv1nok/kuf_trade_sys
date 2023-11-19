@@ -7,8 +7,8 @@ from parser.models import Category, KufarItems
 from bot.bot_config import bot, bot_sub_menu, user_data
 from bot.keyboards.inlinekeyboards import inline_keyboard_delete_search_item
 from bot.keyboards.replykeyoboards import (reply_keyboard_back_gen_menu,
-                                           reply_keyboard_with_gen_menu_and_next)
-from bot.middlewares import get_query
+                                           reply_keyboard_back_gen_menu_and_next)
+from bot.middlewares import get_query, get_category_from_bd
 from bot.models import BotUser, FavoritesItems, SearchItems
 from bot.services import send_error_msg_not_registered, send_message
 
@@ -228,11 +228,12 @@ def get_text_messages(message):
         btn1 = types.KeyboardButton('Показать объявления')
         btn2 = types.KeyboardButton('Поиск по фильтру')
         btn3 = types.KeyboardButton('Показать проданные объявления')
-        btn4 = types.KeyboardButton('Задать автоматический поиск по параметрам')
-        btn5 = types.KeyboardButton('🔙 Главное меню')
+        btn4 = types.KeyboardButton('Узнать цену')
+        btn5 = types.KeyboardButton('Задать автоматический поиск по параметрам')
+        btn6 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2)
         markup.row(btn3, btn4)
-        markup.row(btn5)
+        markup.row(btn5, btn6)
         bot.send_message(message.from_user.id, '💬 Выберите пункт меню.',
                          reply_markup=markup)
         bot.register_next_step_handler(message, get_query)
@@ -308,7 +309,7 @@ def callback_title_inline(call):
     f, cat, name = call.data.split('|')
     user_data.title = name
     bot.send_message(chat_id=call.from_user.id, text='💬 Готово. Нажмите далее.',
-                     reply_markup=reply_keyboard_with_gen_menu_and_next())
+                     reply_markup=reply_keyboard_back_gen_menu_and_next())
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('city'))
@@ -316,7 +317,7 @@ def callback_city_inline(call):
     f, name = call.data.split('|')
     user_data.city = name
     bot.send_message(chat_id=call.from_user.id, text='💬 Готово. Нажмите далее.',
-                     reply_markup=reply_keyboard_with_gen_menu_and_next())
+                     reply_markup=reply_keyboard_back_gen_menu_and_next())
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('search'))
@@ -329,16 +330,6 @@ def callback_search_inline(call):
     user.save(update_fields=['slots_for_searchitems'])
     bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     bot.send_message(chat_id=call.from_user.id, text=f'💬 Готово, доступно слотов {user.slots_for_searchitems}')
-
-
-def get_category_from_bd(message):
-    name, foo = message.text.split('.')
-    try:
-        category = Category.objects.get(name=name)
-        return category.pk
-    except Category.DoesNotExist as ex:
-        bot.send_message(message.from_user.id, '💬 *Упс, проблема с категорией* 💬', parse_mode="Markdown")
-        logger.exception(f'{ex} in get_category_from_bd')
 
 
 bot_command_menu = {'/start': start, '/favorites': show_favorites, '/register': register_user,
