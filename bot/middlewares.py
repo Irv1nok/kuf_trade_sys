@@ -10,7 +10,7 @@ from bot.services import send_error_msg_not_registered
 from bot.keyboards.inlinekeyboards import inline_keyboard_city
 from bot.keyboards.replykeyoboards import (reply_keyboard_back_gen_menu,
                                            reply_keyboard_back_gen_menu_and_next,
-                                           reply_keyboard_gen_menu, reply_keyboard_back_gen_menu_and_repeat)
+                                           reply_keyboard_gen_menu, reply_keyboard_back_gen_menu_and_yes_no_next)
 
 from django.db.models import Avg, Min, Max, Q
 
@@ -57,7 +57,7 @@ def get_query(message):
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
 
-    elif message.text == 'Задать автоматический поиск по параметрам':
+    elif message.text == 'Задать авто. поиск по параметрам':
         markup = reply_keyboard_back_gen_menu()
         user = BotUser.objects.get(telegram_id=message.from_user.id)
         if user_data.user_registered:
@@ -122,8 +122,6 @@ def check_price_step2(message):
 
     bot.send_message(message.from_user.id, 'Повторите ввод или назад в главное меню?', reply_markup=markup)
     bot.register_next_step_handler(message, check_price_step2)
-            # for q in qs:
-            #     pass
 
 
 def get_title(message):
@@ -215,18 +213,51 @@ def get_message_quantity(message):
         return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
 
     if message.text.isdigit():
-        msg_quantity = int(message.text)
-        if msg_quantity > 20 or msg_quantity < 0:
-            bot.send_message(message.from_user.id, '💬 Ошибка!. Превышен лимит сообщений. Устанавливаю среднее *10*.',
+        try:
+            msg_quantity = int(message.text)
+            try:
+                if msg_quantity > 20 or msg_quantity < 0:
+                    raise ValueError
+            except ValueError:
+                bot.send_message(message.from_user.id, '💬 Ошибка!. Превышен лимит сообщений. От 1 - 20',
+                                 parse_mode="Markdown")
+                bot.register_next_step_handler(message, get_message_quantity)
+        except TypeError:
+            bot.send_message(message.from_user.id, '💬 Ошибка!. Введите число.',
                              parse_mode="Markdown")
-            msg_quantity = 10
+            bot.register_next_step_handler(message, get_message_quantity)
+
+        else:
+            user_data.msg_quantity = msg_quantity
+            markup = reply_keyboard_back_gen_menu_and_yes_no_next()
+            bot.send_message(message.from_user.id, '👀 Показать новые товары или Б/У? Нажмите далее,'
+                                                   'что бы пропустить или оставьте поле пустым.', reply_markup=markup)
+            bot.register_next_step_handler(message, get_state_items)
     else:
         markup = reply_keyboard_back_gen_menu()
         bot.send_message(message, '💬 *Ошибка!* Выберите или повторите ввод: ',
                          reply_markup=markup, parse_mode="Markdown")
         bot.register_next_step_handler(message, get_message_quantity)
-    user_data.msg_quantity = msg_quantity
-    get_query_data(message)
+
+
+def get_state_items(message):
+    if message.text == '🔙 Главное меню':
+        markup = reply_keyboard_gen_menu()
+        return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
+
+    if message.text == 'Новые':
+        user_data.state = True
+    elif message.text == 'Б/У':
+        user_data.state = False
+    elif message.text == 'Далее':
+        pass
+    else:
+        markup = reply_keyboard_back_gen_menu_and_yes_no_next()
+        bot.send_message(message.from_user.id, 'Ошибка! 👀 Показать новые товары или Б/У? Нажмите далее,'
+                                               'что бы пропустить или оставьте поле пустым.', reply_markup=markup)
+        bot.register_next_step_handler(message, get_state_items)
+    if user_data.state is None or not user_data.state or user_data.state:
+        get_query_data(message)
 
 
 def get_query_data(message):
@@ -238,12 +269,14 @@ def get_query_data(message):
         qs = KufarItems.objects.filter(cat_id=user_data.category, deleted=user_data.deleted).order_by(
             '-date' if not user_data.deleted else "-time_create")
     filter_query = Q()
-    if user_data.title:
+    if user_data.title is not None:
         filter_query.add(Q(title__icontains=user_data.title), Q.AND)
     if user_data.min_price and user_data.max_price:
         filter_query.add(Q(base_price__gte=user_data.min_price, base_price__lte=user_data.max_price), Q.AND)
-    if user_data.city:
+    if user_data.city is not None:
         filter_query.add(Q(city__icontains=user_data.city), Q.AND)
+    if user_data.state is not None:
+        filter_query.add(Q(state=user_data.state), Q.AND)
     qs = qs.filter(filter_query)
 
     markup = reply_keyboard_back_gen_menu_and_next() if not user_data.check_price else None
@@ -278,7 +311,7 @@ def query_data(message, qs_generator):
             return
 
         except Exception as ex:
-            logger.error(f'Exception - {ex} in query_data')
+            logger.exception(f'Exception - {ex} in query_data')
             bot.send_message(message.from_user.id, '💬 *Ошибка!* Попробуйте еще раз.'
                                                    '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help',
                              reply_markup=reply_keyboard_back_gen_menu(), parse_mode="Markdown")
@@ -307,5 +340,5 @@ def save_search_data_in_db(message):
                                                       '\n/search', reply_markup=markup)
 
     except Exception as ex:
-        logger.error(f'exception in save_search_data {ex}')
+        logger.exception(f'exception in save_search_data {ex}')
         return bot.send_message(message.from_user.id, '💬 Ошибка. Попробуйте еще раз.', reply_markup=markup)

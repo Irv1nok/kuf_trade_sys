@@ -4,6 +4,7 @@ from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
 from parser.services import get_new_updates_in_categories, get_all_data_in_category, get_test_data
 
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView
 
@@ -41,6 +42,7 @@ def parse_pages(request):
                                          schedule=20,
                                          repeat=14400
                                          )  # Парсинг всех данных , schedule=10, repeat=10800
+                messages.success(request, 'Сохранено')
 
     else:
         form = CategoriesForm()

@@ -26,6 +26,7 @@ class UserData:
         self.user_registered: bool = False
         self.search_item: bool = False
         self.check_price: bool = False
+        self.state: bool = None
 
     def reset_data(self):
         self.deleted = False
@@ -36,6 +37,7 @@ class UserData:
         self.msg_quantity = 0
         self.search_item = False
         self.check_price = False
+        self.state = None
 
 
 user_data = UserData()

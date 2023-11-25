@@ -119,10 +119,10 @@ def account(message):
 
         user = BotUser.objects.get(telegram_id=message.from_user.id)
         bot.send_message(chat_id=message.from_user.id,
-                         text=f'**Мой ID**:  {user.telegram_id}'
-                              f'\n*Имя*:  {user.name}'
-                              f'\n*Слоты* для избранных товаров: *{user.slots_for_favitems}*'
-                              f'\n*Слоты* для поиска: *{user.slots_for_searchitems}*',
+                         text=f'Мой ID:  *{user.telegram_id}*'
+                              f'\nИмя:  *{user.name}*'
+                              f'\nСлоты для избранных товаров: *{user.slots_for_favitems}*'
+                              f'\nСлоты для поиска: *{user.slots_for_searchitems}*',
                          reply_markup=markup,
                          parse_mode='Markdown')
 
@@ -229,7 +229,7 @@ def get_text_messages(message):
         btn2 = types.KeyboardButton('Поиск по фильтру')
         btn3 = types.KeyboardButton('Показать проданные объявления')
         btn4 = types.KeyboardButton('Узнать цену')
-        btn5 = types.KeyboardButton('Задать автоматический поиск по параметрам')
+        btn5 = types.KeyboardButton('Задать авто. поиск по параметрам')
         btn6 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2)
         markup.row(btn3, btn4)

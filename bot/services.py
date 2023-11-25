@@ -53,17 +53,12 @@ def send_message(user_id: int,
     deleted = "Да" if obj.deleted else "Нет"
     url = obj.url if not show_sold_items or not obj.deleted else "Нет"
     noimage_photo = open('bot/static/noimage.jpg', 'rb')
-
-    # if update_fav_message:
-    #     bot.send_message(user_id, '🔥❗️ 📫 Изменение цены в объявлении. ❗🔥️')
-    # if search_item_message:
-    #     bot.send_message(user_id, '❗️ 📫 Найдено новое объявление. ❗')
-    # if sold_item_message:
-    #     bot.send_message(user_id, '❗️ 📫 Товар продан..💰 ❗')
+    state = 'Б/У' if not obj.state else 'Новое'
 
     bot.send_photo(chat_id=user_id,
                    photo=obj.photo_url if obj.photo_url else noimage_photo,
                    caption=f'<b>{obj.title}</b>'
+                           f'\nСостояние: {state}'
                            f'\nСтартовая цена: {obj.base_price}'
                            f'\nНовая цена: {new_price}'
                            f'\nГород: {obj.city}'
@@ -74,11 +69,11 @@ def send_message(user_id: int,
                    reply_markup=markup if user_data.user_registered else None)
 
     if update_fav_message:
-        bot.send_message(user_id, '🔥❗️ 📫 Изменение цены в объявлении. ❗🔥️')
+        bot.send_message(user_id, '🔥📫Изменение цены в объявлении🔥️')
     if search_item_message:
-        bot.send_message(user_id, '❗️ 📫 Найдено новое объявление. ❗')
+        bot.send_message(user_id, '❗️📫 Найдено новое объявление.❗')
     if sold_item_message:
-        bot.send_message(user_id, '❗️ 📫 Товар продан..💰 ❗'
-                                  '\nОбъявление больше отслеживаться не будет. Можете удалить из избранного 🚮❗')
+        bot.send_message(user_id, '❗️📫 Товар продан..💰❗'
+                                  '\nОбъявление больше отслеживаться не будет. Можете удалить из избранного 🚮')
 
     logger.info('Bot send_message')

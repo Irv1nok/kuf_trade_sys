@@ -2,10 +2,10 @@ from django.db import models
 
 
 class BotUser(models.Model):
-    telegram_id = models.IntegerField(unique=True)
     name = models.CharField(max_length=10)
     slots_for_favitems = models.PositiveIntegerField(default=5)
     slots_for_searchitems = models.PositiveIntegerField(default=5)
+    telegram_id = models.IntegerField(unique=True)
 
     def __str__(self):
         return f'{self.telegram_id} {self.name}'
@@ -30,10 +30,10 @@ class FavoritesItems(models.Model):
 class SearchItems(models.Model):
     bot_user = models.ForeignKey('BotUser', on_delete=models.CASCADE)
     category = models.IntegerField(null=True)
-    title = models.CharField(max_length=100, null=True, blank=True, verbose_name='Название')
+    city = models.CharField(max_length=30, null=True, blank=True, verbose_name='Город')
     min_price = models.PositiveIntegerField(null=True, blank=True)
     max_price = models.PositiveIntegerField(null=True, blank=True)
-    city = models.CharField(max_length=30, null=True, blank=True, verbose_name='Город')
+    title = models.CharField(max_length=100, null=True, blank=True, verbose_name='Название')
 
     def __str__(self):
         return f'{self.title}'

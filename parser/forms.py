@@ -6,7 +6,7 @@ from django import forms
 class CategoriesForm(forms.Form):
     category = forms.ModelChoiceField(label='Категория',
                                       required=False,
-                                      queryset=Category.objects.all(),
+                                      queryset=Category.objects.all().order_by('id'),
                                       widget=forms.Select(attrs={'class': 'form-control js-example-basic-single'}))
 
     test_connect = forms.BooleanField(required=False,
