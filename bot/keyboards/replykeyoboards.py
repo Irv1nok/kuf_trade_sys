@@ -1,7 +1,5 @@
 from telebot import types
 
-from bot.bot_config import user_data
-
 
 def reply_keyboard_back_gen_menu():
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -41,8 +39,6 @@ def reply_keyboard_gen_menu():
     btn1 = types.KeyboardButton('Компьютерная техника. 🖥')
     btn2 = types.KeyboardButton('Телефоны и планшеты. 📱')
     btn3 = types.KeyboardButton('Строительный инструмент. 🛠')
-    # btn4 = types.KeyboardButton('Хобби, спорт и туризм 🎿')
-    # btn5 = types.KeyboardButton('Авто и транспорт 🚗')
     markup.row(btn1, btn2)
     markup.row(btn3)
     return markup

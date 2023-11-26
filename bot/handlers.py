@@ -191,9 +191,12 @@ def get_text_messages(message):
     elif message.text == 'Телефоны и планшеты. 📱':
         btn1 = types.KeyboardButton('Телефоны. 📱')
         btn2 = types.KeyboardButton('Планшеты. 🕹')
-        btn3 = types.KeyboardButton('🔙 Главное меню')
+        btn3 = types.KeyboardButton('Умные часы и фитнес-трекеры. ⌚️')
+        btn4 = types.KeyboardButton('Наушники. 🎧')
+        btn5 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2)
-        markup.row(btn3)
+        markup.row(btn3, btn4)
+        markup.row(btn5)
         bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
 
     elif message.text == 'Комплектующие. ⚙️':
@@ -218,6 +221,16 @@ def get_text_messages(message):
         btn2 = types.KeyboardButton('Принтеры. 🖨')
         btn3 = types.KeyboardButton('Сканеры. 📷')
         btn4 = types.KeyboardButton('Фотопринтеры. 📸')
+        btn5 = types.KeyboardButton('🔙 Главное меню')
+        markup.row(btn1, btn2, btn3)
+        markup.row(btn4, btn5)
+        bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
+
+    elif message.text == 'Наушники. 🎧':
+        btn1 = types.KeyboardButton('Внутриканальные. 🎧')
+        btn2 = types.KeyboardButton('Вкладыши. 🎧')
+        btn3 = types.KeyboardButton('Накладные. 🎧')
+        btn4 = types.KeyboardButton('Полноразмерные. 🎧')
         btn5 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2, btn3)
         markup.row(btn4, btn5)
