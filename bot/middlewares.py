@@ -27,8 +27,8 @@ def get_category_from_bd(message):
         category = Category.objects.get(name=name)
         return category.pk
     except Category.DoesNotExist as ex:
-        bot.send_message(message.from_user.id, 'Проблема с категорией* 💬', parse_mode="Markdown")
-        logger.exception(f'{ex} in get_category_from_bd')
+        bot.send_message(message.from_user.id, '*Категория не найдена* 💬', parse_mode="Markdown")
+        logger.exception(f'{ex} in middleware.get_category_from_bd')
 
 
 def get_query(message):
@@ -188,23 +188,48 @@ def get_city(message):
     if not message.text == 'Далее':
         user_data.city = message.text
 
+    markup = reply_keyboard_back_gen_menu_and_yes_no_next()
+    text = 'Показать новые товары'
+    if user_data.search_item:
+        text = 'Задать авто. поиск новых товаров'
+    bot.send_message(message.from_user.id, f'👀 {text} или Б/У? Нажмите далее,'
+                                           'что бы пропустить или оставьте поле пустым.', reply_markup=markup)
+
+    bot.register_next_step_handler(message, get_state_items)
+
+
+def get_state_items(message):
+    if message.text == '🔙 Главное меню':
+        markup = reply_keyboard_gen_menu()
+        return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
+
+    if message.text == 'Новые':
+        user_data.state = True
+    elif message.text == 'Б/У':
+        user_data.state = False
+    elif message.text == 'Далее':
+        pass
+    else:
+        bot.send_message(message.from_user.id, '💬 Ошибка ввода!. Будут отображены все категории товаров.',
+                         parse_mode="Markdown")
     if user_data.search_item:
         return save_search_data_in_db(message)
 
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton('5')
-    btn2 = types.KeyboardButton('10')
-    btn3 = types.KeyboardButton('15')
-    btn4 = types.KeyboardButton('20')
-    btn5 = types.KeyboardButton('🔙 Главное меню')
-    markup.add(btn1, btn2, btn3, btn4, btn5)
-    bot.send_message(message.from_user.id, '💬 Сколько объявлений показать?'
-                                           '\nМаксимально *20*.'
-                                           '\nВыберите, или введите в чат *число:*',
-                     reply_markup=markup,
-                     parse_mode="Markdown")
+    if user_data.state is None or not user_data.state or user_data.state:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton('5')
+        btn2 = types.KeyboardButton('10')
+        btn3 = types.KeyboardButton('15')
+        btn4 = types.KeyboardButton('20')
+        btn5 = types.KeyboardButton('🔙 Главное меню')
+        markup.add(btn1, btn2, btn3, btn4, btn5)
+        bot.send_message(message.from_user.id, '💬 Сколько объявлений показать?'
+                                               '\nМаксимально *20*.'
+                                               '\nВыберите, или введите в чат *число:*',
+                         reply_markup=markup,
+                         parse_mode="Markdown")
 
-    bot.register_next_step_handler(message, get_message_quantity)
+        bot.register_next_step_handler(message, get_message_quantity)
 
 
 def get_message_quantity(message):
@@ -229,35 +254,12 @@ def get_message_quantity(message):
 
         else:
             user_data.msg_quantity = msg_quantity
-            markup = reply_keyboard_back_gen_menu_and_yes_no_next()
-            bot.send_message(message.from_user.id, '👀 Показать новые товары или Б/У? Нажмите далее,'
-                                                   'что бы пропустить или оставьте поле пустым.', reply_markup=markup)
-            bot.register_next_step_handler(message, get_state_items)
+            get_query_data(message)
     else:
         markup = reply_keyboard_back_gen_menu()
         bot.send_message(message, '💬 *Ошибка!* Выберите или повторите ввод: ',
                          reply_markup=markup, parse_mode="Markdown")
         bot.register_next_step_handler(message, get_message_quantity)
-
-
-def get_state_items(message):
-    if message.text == '🔙 Главное меню':
-        markup = reply_keyboard_gen_menu()
-        return bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
-
-    if message.text == 'Новые':
-        user_data.state = True
-    elif message.text == 'Б/У':
-        user_data.state = False
-    elif message.text == 'Далее':
-        pass
-    else:
-        markup = reply_keyboard_back_gen_menu_and_yes_no_next()
-        bot.send_message(message.from_user.id, 'Ошибка! 👀 Показать новые товары или Б/У? Нажмите далее,'
-                                               'что бы пропустить или оставьте поле пустым.', reply_markup=markup)
-        bot.register_next_step_handler(message, get_state_items)
-    if user_data.state is None or not user_data.state or user_data.state:
-        get_query_data(message)
 
 
 def get_query_data(message):
@@ -331,7 +333,7 @@ def save_search_data_in_db(message):
     try:
         user = BotUser.objects.get(telegram_id=message.from_user.id)
         user.searchitems_set.create(title=user_data.title, min_price=user_data.min_price, max_price=user_data.max_price,
-                                    city=user_data.city, category=user_data.category)
+                                    city=user_data.city, category=user_data.category, state=user_data.state)
         user.slots_for_searchitems -= 1
         user.save(update_fields=['slots_for_searchitems'])
         user_data.reset_data()

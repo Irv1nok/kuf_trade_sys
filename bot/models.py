@@ -34,6 +34,7 @@ class SearchItems(models.Model):
     min_price = models.PositiveIntegerField(null=True, blank=True)
     max_price = models.PositiveIntegerField(null=True, blank=True)
     title = models.CharField(max_length=100, null=True, blank=True, verbose_name='Название')
+    state = models.BooleanField(null=True, blank=True, verbose_name='Состояние')
 
     def __str__(self):
         return f'{self.title}'

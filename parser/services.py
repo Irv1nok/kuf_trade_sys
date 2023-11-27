@@ -25,8 +25,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-# ADVERTISING_IN_CATS = {1: -8, 2: -8, 4: -8, 5: -8, 6: -8, 7: -8, 8: -8, 9: -8, 10: -8, 11: -8, 12: -8,
-#                        13: -8, 14: -8, 15: -8, 16: -8, 17: -8, 18: -8, 19: None}  # Категории без рекламы проходятся без среза последних 8 объявлений
 logger = logging.getLogger(__name__)
 
 
@@ -119,9 +117,6 @@ def parse_web_page(driver,
     cat = Category.objects.get(pk=cat_id)
     count_ad = cat.count_ad
 
-    search_items = SearchItems.objects.filter(category=cat_id)
-    is_search_items = search_items.exists()
-
     if not os.path.exists('cookies'):
         save_cookies(driver, category=url, accept_button_class=category['accept_button'])
 
@@ -141,6 +136,10 @@ def parse_web_page(driver,
     driver.refresh()
 
     item_state = False if 'cnd=1' in driver.current_url else True  # cnd=1 - б/у, cnd=2 - новые
+    search_items = (SearchItems.objects.filter(category=cat_id, state=item_state) &
+                    SearchItems.objects.filter(category=cat_id, state__isnull=True))
+    is_search_items = search_items.exists()
+    print(search_items)
 
     if not update:
         WebDriverWait(driver, 10).until(

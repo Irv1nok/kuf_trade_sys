@@ -31,21 +31,21 @@ class KufarItems(models.Model):
 
 
 class Category(models.Model):
-    accept_button = models.CharField(max_length=200, verbose_name='Класс кнопки Принять куки')
-    city_date = models.CharField(max_length=50, verbose_name='Класс города и времени')
+    accept_button = models.CharField(max_length=200, blank=True, null=True, verbose_name='Класс кнопки Принять куки')
+    city_date = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс города и времени')
     count_ad = models.IntegerField(default=0)
     count_ads = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс количества объявлений')
-    next_page = models.CharField(max_length=100, verbose_name='Класс кнопки след.стр')
-    name = models.CharField(max_length=50, verbose_name='Название')
-    price = models.CharField(max_length=50, verbose_name='Класс цены')
+    next_page = models.CharField(max_length=100, blank=True, null=True, verbose_name='Класс кнопки след.стр')
+    name = models.CharField(max_length=50, blank=True, null=True, verbose_name='Название')
+    price = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс цены')
     photo = models.CharField(blank=True, null=True, verbose_name='Класс фото')
     process_parse_url = models.TextField(blank=True, null=True,
                                          help_text='Ссылка на предыдущую страницу в драйвере парсера')
     state = models.BooleanField(null=True, blank=True)
-    title = models.CharField(max_length=50, verbose_name='Класс заголовка')
-    url_used = models.CharField(verbose_name='Ссылка на категорию б/у товаров')
-    url_new = models.CharField(null=True, verbose_name='Ссылка на категорию новых товаров')
-    wrapper = models.CharField(max_length=50, verbose_name='Класс оболочка')
+    title = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс заголовка')
+    url_used = models.CharField(blank=True, null=True, verbose_name='Ссылка на категорию б/у товаров')
+    url_new = models.CharField(blank=True, null=True, verbose_name='Ссылка на категорию новых товаров')
+    wrapper = models.CharField(max_length=50, blank=True, null=True, verbose_name='Класс оболочка')
 
     def __str__(self):
         return self.name

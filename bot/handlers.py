@@ -25,8 +25,6 @@ def start(message):
     btn1 = types.KeyboardButton('Компьютерная техника. 🖥')
     btn2 = types.KeyboardButton('Телефоны и планшеты. 📱')
     btn3 = types.KeyboardButton('Строительный инструмент. 🛠')
-    # btn4 = types.KeyboardButton('Хобби, спорт и туризм 🎿')
-    # btn5 = types.KeyboardButton('Авто и транспорт 🚗')
 
     markup.row(btn1, btn2)
     markup.row(btn3)
@@ -137,18 +135,19 @@ def search_items(message):
             user = BotUser.objects.get(telegram_id=int(message.from_user.id))
             if user.searchitems_set.exists():
                 for obj in user.searchitems_set.all():
-
                     cat = Category.objects.get(pk=obj.category).name
                     title = obj.title if obj.title else "Не задано"
                     min_price = obj.min_price if obj.min_price else "Не задано"
                     max_price = obj.max_price if obj.max_price else "Не задано"
                     city = obj.city if obj.city else "Не задано"
+                    state = 'Новое' if obj.state else 'Б/У' if obj.state is not None else 'Любое'
 
                     bot.send_message(message.from_user.id, f'⚙️ *Категория* - {cat}'
                                                            f'\n👀 *Название* - {title}'
                                                            f'\n⬇️ *Мин.цена* - {min_price}'
                                                            f'\n⬆️ *Макс.цена* - {max_price}'
-                                                           f'\n🌏 *Город* - {city}',
+                                                           f'\n🌏 *Город* - {city}'
+                                                           f'\n🌏 *Состояние* - {state}',
                                      reply_markup=inline_keyboard_delete_search_item(obj.pk), parse_mode='Markdown')
 
                 bot.send_message(message.from_user.id, 'Выберите пункт меню', reply_markup=markup)
@@ -186,6 +185,49 @@ def get_text_messages(message):
         markup.row(btn1, btn2)
         markup.row(btn3, btn4)
         markup.row(btn5, btn9)
+        bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
+
+    elif message.text == 'Строительный инструмент. 🛠':
+        btn1 = types.KeyboardButton('Бензо и электрорезы. ⚙️')
+        btn2 = types.KeyboardButton('Дрели. 🔫')
+        btn3 = types.KeyboardButton('Измерительный инструмент. 📐')
+        btn4 = types.KeyboardButton('Ключи, отвертки. 🪛')
+        btn5 = types.KeyboardButton('Краскораспылители, краскопульты. 🚿')
+        btn6 = types.KeyboardButton('Кусачки, плоскогубцы, пассатижи. 🛠')
+        btn7 = types.KeyboardButton('Лобзики. 🪚')
+        btn8 = types.KeyboardButton('Миксеры строительные. 🧬')
+        btn9 = types.KeyboardButton('Наборы инструментов. 🛠')
+        btn10 = types.KeyboardButton('Ножницы по металлу. 💎')
+        btn11 = types.KeyboardButton('Отбойные молотки, топоры, кувалды. 🔨')
+        btn12 = types.KeyboardButton('Паяльники. 🚬')
+        btn13 = types.KeyboardButton('Перфораторы. ⚡️')
+        btn14 = types.KeyboardButton('Пистолеты для клея, пены, герметиков. 🔫️')
+        btn15 = types.KeyboardButton('Плиткорезы, стеклорезы, захваты. 🪚')
+        btn16 = types.KeyboardButton('Рубанки. 🪚')
+        btn17 = types.KeyboardButton('Степлеры, гвоздезабиватели. 🔨')
+        btn18 = types.KeyboardButton('Тиски. 💽')
+        btn19 = types.KeyboardButton('Фены строительные. ⚡️')
+        btn20 = types.KeyboardButton('Фрезеры. 💳')
+        btn21 = types.KeyboardButton('Шлифовальные машины, болгарки. ⚡️')
+        btn22 = types.KeyboardButton('Шпатели, валики, кисти. 📽')
+        btn23 = types.KeyboardButton('Шуруповерты. ⚡️')
+        btn24 = types.KeyboardButton('Ведра, емкости. 🪣')
+        btn25 = types.KeyboardButton('Оснастка для инструмента. 🛠')
+        btn26 = types.KeyboardButton('Циркулярные, сабельные пилы. ⚙')
+        btn27 = types.KeyboardButton('Ящики, сумки для инструментов. 🧰')
+        btn28 = types.KeyboardButton('Прочие инструменты. 🧰')
+        btn29 = types.KeyboardButton('🔙 Главное меню')
+
+        markup.add(btn1, btn2, btn3)
+        markup.add(btn4, btn5, btn6)
+        markup.add(btn7, btn8, btn9)
+        markup.add(btn10, btn11, btn12)
+        markup.add(btn13, btn14, btn15)
+        markup.add(btn16, btn17, btn18)
+        markup.add(btn19, btn20, btn21)
+        markup.add(btn22, btn23, btn24)
+        markup.add(btn25, btn26, btn27)
+        markup.add(btn28, btn29)
         bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
 
     elif message.text == 'Телефоны и планшеты. 📱':
@@ -256,8 +298,6 @@ def get_text_messages(message):
         btn1 = types.KeyboardButton('Компьютерная техника. 🖥')
         btn2 = types.KeyboardButton('Телефоны и планшеты. 📱')
         btn3 = types.KeyboardButton('Строительный инструмент. 🛠')
-        # btn4 = types.KeyboardButton('Хобби, спорт и туризм 🎿')
-        # btn5 = types.KeyboardButton('Авто и транспорт 🚗')
         markup.row(btn1, btn2)
         markup.row(btn3)
         bot.send_message(message.from_user.id, '👀 Выберите интересующий вас раздел', reply_markup=markup)
