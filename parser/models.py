@@ -23,7 +23,7 @@ class KufarItems(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('item-detail', kwargs={'pk': self.id})
+        return reverse('parser:item-detail', kwargs={'pk': self.id})
 
     class Meta:
         verbose_name = 'Товар куфара'

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+{% extends 'base.html' %}
+
+{% block title %}<br><h4>Отправка сообщения пользователям:</h4>{% endblock %}
+
+{% block content %}
+    <br>
+    <form action="" method="post">
+    {% csrf_token %}
+    <div class="input-group mb-3">
+      <input type="text" name='msg' class="form-control" placeholder="Текст сообщения" aria-label="Текст сообщения" aria-describedby="basic-addon2"/>
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="submit">Отправить</button>
+      </div>
+    </div>
+    </form>
+{% endblock %}
+</html>

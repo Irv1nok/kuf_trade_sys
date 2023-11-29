@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'parser.apps.ParserConfig',
     'background_task',
     'bot.apps.BotConfig',
-    "debug_toolbar",
+    'accounts.apps.AccountsConfig',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [

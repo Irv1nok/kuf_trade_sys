@@ -147,7 +147,6 @@ def parse_web_page(driver,
         try:
             res = driver.find_element(
                 By.XPATH, category['count_ads']).text
-            print(res)
             res1 = ''.join(res.split()[:-1])
             count_ads = int(res1)
         except TypeError:

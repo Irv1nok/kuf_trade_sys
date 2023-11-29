@@ -147,7 +147,7 @@ def search_items(message):
                                                            f'\n⬇️ *Мин.цена* - {min_price}'
                                                            f'\n⬆️ *Макс.цена* - {max_price}'
                                                            f'\n🌏 *Город* - {city}'
-                                                           f'\n🌏 *Состояние* - {state}',
+                                                           f'\n💎 *Состояние* - {state}',
                                      reply_markup=inline_keyboard_delete_search_item(obj.pk), parse_mode='Markdown')
 
                 bot.send_message(message.from_user.id, 'Выберите пункт меню', reply_markup=markup)

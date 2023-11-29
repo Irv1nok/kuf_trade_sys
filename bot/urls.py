@@ -1,8 +1,8 @@
-from bot.views import bot_config
+from bot.views import bot_send_msg_users
 
 from django.urls import path
 
 
 urlpatterns = [
-    path('config/', bot_config, name='bot_config'),
+    path('', bot_send_msg_users, name='home'),
 ]

@@ -1,7 +1,8 @@
-{% url 'home' as home_url %}
+{% url 'parser:home' as parser_home_url %}
+{% url 'bot:home' as bot_home_url %}
 {% url 'test_conn' as test_conn_url %}
-{% url 'parse_pages' as parse_pages_url %}
-{% url 'bot_config' as bot_config_url %}
+{% url 'parser:parse_pages' as parser_parse_pages_url %}
+{% url 'parser:about' as parser_about_url %}
 
 <!doctype html>
 {% load static %}
@@ -174,60 +175,51 @@
 
 <main class="d-flex flex-nowrap">
 <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style="width: 260px;">
-    <a href={% url 'home' %} class="d-flex d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+    <a href={% url 'parser:home' %} class="d-flex d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
         <span class="fs-4 text-center">Объявления kufar</span>
-        <img src="{% static 'share_logo_new.png' %}" style="width:30%">
-    </a>
+        <img src="{% static 'share_logo_new.png' %}" style="width:30%"></a>
     <hr>
     <ul class="nav nav-pills flex-column mb-auto">
-    <li class="nav-item" >
-        <a href={% url "home" %} class="nav-link
-           {% if request.path == home_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+{% if user.is_authenticated %}
+    <li class="nav-item">
+        <a href={% url 'parser:home' %} class="nav-link
+           {% if request.path == parser_home_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#home"/></svg>
             Объявления
         </a>
       </li>
       <li>
-        <a href={% url "bot_config" %} class="nav-link
-           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#table"/></svg>
-          Список подписок
-        </a>
-      </li>
-      <li>
-        <a href={% url "parse_pages" %} class="nav-link
-            {% if request.path == parse_pages_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+        <a href={% url 'parser:parse_pages' %} class="nav-link
+            {% if request.path == parser_parse_pages_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#grid"/></svg>
           Управление парсером
         </a>
       </li>
       <li>
-        <a href={% url "bot_config" %} class="nav-link
-           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
+        <a href={% url 'bot:home' %} class="nav-link
+           {% if request.path == bot_home_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
           <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#people-circle"/></svg>
-          Конфигурация бота
+          Отправка сообщения
         </a>
       </li>
 
-      <li>
-        <a href={% url "bot_config" %} class="nav-link
-           {% if request.path == bot_config_url %} active" aria-current="page"{% else %}text-white"{% endif %}>
-          <svg class="bi pe-none me-2" width="16" height="16"><use xlink:href="#speedometer2"/></svg>
-          О сервисе
-        </a>
-      </li>
     </ul>
     <hr>
+{% endif %}
+    <br>
     <div class="dropdown">
       <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="https://github.com/mdo.png" alt="" width="32" height="32" class="rounded-circle me-2">
-        <strong>mdo</strong>
+        <img src="{% static 'user-circle.svg' %}" alt="" width="32" height="32" class="rounded-circle me-2">
+        <strong>{{ user }}</strong>
       </a>
       <ul class="dropdown-menu dropdown-menu-dark text-small shadow">
-        <li><a class="dropdown-item" href="#">Settings</a></li>
-        <li><a class="dropdown-item" href="#">Profile</a></li>
+        <li><a class="dropdown-item" href="{% url 'admin:index' %}">Админка</a></li>
         <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item" href="#">Sign out</a></li>
+          {% if not user.is_authenticated %}
+          <li><a class="dropdown-item" href="{% url 'accounts:login' %}">Войти</a></li>
+          {% else %}
+          <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Выйти</a></li>
+          {% endif %}
       </ul>
     </div>
 </div>
@@ -260,8 +252,13 @@
           </div>
         </div>
       </div>
+    {% block auth %}{% endblock %}
+    {% if user.is_authenticated %}
         {% block title %}{% endblock %}
+        <div id="content">
         {% block content %}{% endblock %}
+        </div>
+    {% endif %}
     </div>
 
 </main>

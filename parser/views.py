@@ -91,3 +91,7 @@ class SearchItemsList(ListView):
 class ItemDetailView(DetailView):
     model = KufarItems
     template_name = 'parser/detail.html'
+
+
+def about(request):
+    return render(request, 'parser/about.html')

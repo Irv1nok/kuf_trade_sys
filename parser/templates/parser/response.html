@@ -18,7 +18,7 @@
     </thead>
     <tbody>
     {% for key, value in response.items %}
-    {% if not value %}
+    {% if value is None %}
       <tr class="table-danger">
     {% else %}
       <tr class="table-success">
