@@ -57,6 +57,14 @@ def get_new_updates_in_categories():
     driver = start_chrome_driver()
     all_cats = Category.objects.all()
     update = True
+    if os.path.exists('cookies'):
+        logger.info('Open www.kufar.by/l')
+        driver.get('https://www.kufar.by/l')
+        logger.info('Load cookies')
+        for cookie in pickle.load(open('cookies', 'rb')):
+            driver.add_cookie(cookie)
+
+    driver.refresh()
     for cat in all_cats:
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id, url=cat.url_used)
         time.sleep(1)
@@ -69,8 +77,16 @@ def get_new_updates_in_categories():
 @background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
     cat = Category.objects.get(pk=cat_id)
-    logger.info(f'Start DRIVER get_all_data_in_category {category["name"]}')
+    logger.info('Start DRIVER')
     driver = start_chrome_driver()
+
+    if os.path.exists('cookies'):
+        logger.info('Open www.kufar.by/l')
+        driver.get('https://www.kufar.by/l')
+        logger.info('Load cookies')
+        for cookie in pickle.load(open('cookies', 'rb')):
+            driver.add_cookie(cookie)
+    driver.refresh()
 
     logger.info(f'Start get_all_data_in_category {category["name"]}')
     if not cat.process_parse_url:
@@ -100,7 +116,7 @@ def save_cookies(driver, category: str, accept_button_class: str):
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,
                                                                     accept_button_class))).click()
     except Exception as ex:
-        logger.debug(ex)
+        logger.debug(f'Error in save_cookies {ex}')
     finally:
         pickle.dump(driver.get_cookies(), open('cookies', 'wb'))
         logger.info('Save cookies success')
@@ -129,15 +145,10 @@ def parse_web_page(driver,
     else:
         driver.get(url)
 
-    if os.path.exists('cookies'):
-        for cookie in pickle.load(open('cookies', 'rb')):
-            driver.add_cookie(cookie)
-
-    driver.refresh()
-
     item_state = False if 'cnd=1' in driver.current_url else True  # cnd=1 - б/у, cnd=2 - новые
-    search_items = (SearchItems.objects.filter(category=cat_id, state=item_state) &
-                    SearchItems.objects.filter(category=cat_id, state__isnull=True))
+    state = SearchItems.objects.filter(category=cat_id, state=item_state)
+    all_null = SearchItems.objects.filter(category=cat_id, state__isnull=True)
+    search_items = state | all_null
     is_search_items = search_items.exists()
     print(search_items)
 
@@ -174,7 +185,7 @@ def parse_web_page(driver,
                     except Exception as ex:
                         logger.info(f'Error in cycle while -> photo {ex}')
                         photo = None
-                except Exception as ex:
+                except Exception as ex:  # Пропуск рекламного товара с некорректными данными
                     logger.info(f'{ex}')
                     continue
                 item_in_card = {'price': price,
@@ -315,6 +326,11 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
 
 
 def update_sold_items_in_category(cat_id: int):
+    """Обновляет статус продано или нет товара в бд по временной дельте.
+    Если товар не обновлялся более 6 часов считаем его проданным
+    Если товар был продан в промежутке между обновлениями, его статус time_update = null
+    сохраниться, считаем его проданным"""
+
     delta = timezone.now() - timedelta(hours=6)
     qs1 = KufarItems.objects.filter(cat_id=cat_id,
                                     deleted=False,
@@ -333,6 +349,7 @@ def update_sold_items_in_category(cat_id: int):
 
 
 def send_users_msg_sold_items(qs):
+    """Отправляем сообщение пользователю/ям что объект, добавленный в избранное, продан"""
     qs_fav = qs.filter(in_favorites=True)
     if qs_fav.exists():
         for obj in qs_fav:
@@ -346,6 +363,7 @@ def send_users_msg_sold_items(qs):
 
 
 def send_users_msg_fav_items(obj, update=False, sold=False):
+    """Отправляем сообщение пользователю/ям что у объекта, добавленного в избранное, изменилась цена"""
     try:
         for pk in FavoritesItems.objects.filter(pk_item=obj.pk):
             send_message(pk.bot_user.telegram_id, obj=obj, update_fav_message=update, sold_item_message=sold)
@@ -355,6 +373,7 @@ def send_users_msg_fav_items(obj, update=False, sold=False):
 
 
 def send_users_msg_search_items(search_items, obj):
+    """Отправляем сообщение пользователю/ям что у найден товар, добавленный в поиск"""
     find_status = [False, False, False]
     for obj_search in search_items:
         if obj_search.title:

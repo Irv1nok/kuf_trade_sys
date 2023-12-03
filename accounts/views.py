@@ -2,7 +2,6 @@ from accounts.forms import LoginForm
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-
 from django.shortcuts import render, redirect
 
 
@@ -17,9 +16,11 @@ def user_login(request):
                     login(request, user)
                     return redirect('/')
                 else:
-                    return messages.error(request, 'Аккаунт отключен')
+                    messages.error(request, 'Аккаунт отключен')
+                    return redirect('accounts:login')
             else:
-                return messages.error(request, 'Неверный логин или пароль')
+                messages.error(request, 'Неверный логин или пароль')
+                return redirect('accounts:login')
     else:
         form = LoginForm()
     return render(request, 'accounts/login.html', {'form': form})
