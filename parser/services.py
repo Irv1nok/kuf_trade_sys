@@ -48,6 +48,17 @@ def start_chrome_driver():
     # driver
     service = Service()
     driver = webdriver.Chrome(service=service, options=options)
+    category = Category.objects.get(pk=1)
+    if not os.path.exists('cookies'):
+        save_cookies(driver, accept_button_class=category.accept_button)
+        driver.refresh()
+    if os.path.exists('cookies'):
+        logger.info('Open www.kufar.by/l')
+        driver.get('https://www.kufar.by/l')
+        logger.info('Load cookies')
+        for cookie in pickle.load(open('cookies', 'rb')):
+            driver.add_cookie(cookie)
+    driver.refresh()
     return driver
 
 
@@ -57,14 +68,7 @@ def get_new_updates_in_categories():
     driver = start_chrome_driver()
     all_cats = Category.objects.all()
     update = True
-    if os.path.exists('cookies'):
-        logger.info('Open www.kufar.by/l')
-        driver.get('https://www.kufar.by/l')
-        logger.info('Load cookies')
-        for cookie in pickle.load(open('cookies', 'rb')):
-            driver.add_cookie(cookie)
 
-    driver.refresh()
     for cat in all_cats:
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id, url=cat.url_used)
         time.sleep(1)
@@ -79,14 +83,6 @@ def get_all_data_in_category(category: dict, cat_id: int):
     cat = Category.objects.get(pk=cat_id)
     logger.info('Start DRIVER')
     driver = start_chrome_driver()
-
-    if os.path.exists('cookies'):
-        logger.info('Open www.kufar.by/l')
-        driver.get('https://www.kufar.by/l')
-        logger.info('Load cookies')
-        for cookie in pickle.load(open('cookies', 'rb')):
-            driver.add_cookie(cookie)
-    driver.refresh()
 
     logger.info(f'Start get_all_data_in_category {category["name"]}')
     if not cat.process_parse_url:
@@ -109,9 +105,9 @@ def get_test_data(category: dict, cat_id: int, test_conn: bool):
                           url=category['url_used'])
 
 
-def save_cookies(driver, category: str, accept_button_class: str):
+def save_cookies(driver, accept_button_class: str):
     """сохранение и запись в файл cookies"""
-    driver.get(category)
+    driver.get('https://www.kufar.by/l')
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,
                                                                     accept_button_class))).click()
@@ -133,9 +129,6 @@ def parse_web_page(driver,
     cat = Category.objects.get(pk=cat_id)
     count_ad = cat.count_ad
 
-    if not os.path.exists('cookies'):
-        save_cookies(driver, category=url, accept_button_class=category['accept_button'])
-
     if not update:
         if not cat.process_parse_url:
             driver.get(url)
@@ -145,9 +138,9 @@ def parse_web_page(driver,
     else:
         driver.get(url)
 
-    item_state = False if 'cnd=1' in driver.current_url else True  # cnd=1 - б/у, cnd=2 - новые
+    item_state = False if 'cnd=1' in driver.current_url else True  # cnd=1 - б/у, cnd=2 - новые.
     state = SearchItems.objects.filter(category=cat_id, state=item_state)
-    all_null = SearchItems.objects.filter(category=cat_id, state__isnull=True)
+    all_null = SearchItems.objects.filter(category=cat_id, state__isnull=True)  # null - любое состояние.
     search_items = state | all_null
     is_search_items = search_items.exists()
     print(search_items)
@@ -169,7 +162,7 @@ def parse_web_page(driver,
 
     try:
         while True:
-            time.sleep(0.5)
+            time.sleep(0.3)
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             all_items = soup.find_all('a', class_=category['wrapper'])
 
@@ -377,11 +370,21 @@ def send_users_msg_search_items(search_items, obj):
     find_status = [False, False, False]
     for obj_search in search_items:
         if obj_search.title:
-            if len(obj_search.title.split()) > 1:
-                res = [True if x in obj.title.lower() else False for x in obj_search.title.lower().split()]
+            res = []
+            if len(search_title := obj_search.title.lower().split()) > 1:
+                obj_title = obj.title.lower().split()
+                for x in search_title:
+                    if x.isdigit():
+                        stat = [True if c == x else False for c in obj_title]
+                        res.append(True if any(stat) else False)
+
+                    elif x in obj_title():
+                        res.append(True)
+                    else:
+                        res.append(False)
                 if all(res):
                     find_status[0] = True
-            elif obj_search.title.lower() in obj.title.lower():
+            elif search_title in obj.title.lower():
                 find_status[0] = True
         else:
             find_status[0] = True
