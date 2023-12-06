@@ -64,7 +64,7 @@ def get_query(message):
             if user.slots_for_searchitems > 0:
                 user_data.search_item = True
                 markup_inline = keyboards_cats[user_data.category]
-                bot.send_message(message.from_user.id, '💬 Введите *название* товара или выберите.',
+                bot.send_message(message.from_user.id, '💬 Введите *Название* товара или выберите.',
                                  reply_markup=markup_inline, parse_mode='Markdown')
                 markup = reply_keyboard_back_gen_menu_and_next()
                 bot.send_message(message.from_user.id, 'Чтобы пропустить нажмите *Далее*',
