@@ -16,6 +16,7 @@ outcome==1.2.0
 pycparser==2.21
 pyflakes==3.1.0
 PySocks==1.7.1
+pyTelegramBotAPI==4.14.0
 python-dateutil==2.8.2
 python-decouple==3.8
 selenium==4.11.2
@@ -29,4 +30,5 @@ trio==0.22.2
 trio-websocket==0.10.3
 tzdata==2023.3
 urllib3==2.0.4
+webdriver-manager==4.0.1
 wsproto==1.2.0

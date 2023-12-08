@@ -24,6 +24,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,9 @@ def start_chrome_driver():
     useragent = UserAgent()
     options = webdriver.ChromeOptions()
     options.add_argument(f'--user-agent={useragent.random}')
+    options.add_argument('--no-sandbox')
     options.add_argument('--headless=new')  # Безоконный режим
+    options.add_argument('--disable-dev-shm-usage')
     options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
     options.add_argument('window-size=1920,1080')
     options.add_argument('start-maximized')
@@ -46,8 +49,7 @@ def start_chrome_driver():
     options.add_experimental_option('excludeSwitches', ["enable-logging"])
 
     # driver
-    service = Service()
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     category = Category.objects.get(pk=1)
     if not os.path.exists('cookies'):
         save_cookies(driver, accept_button_class=category.accept_button)
@@ -119,7 +121,7 @@ def save_cookies(driver, accept_button_class: str):
 
 
 def parse_web_page(driver,
-                   category: Dict[str, any],
+                   category,
                    cat_id: int,
                    url: str,
                    update: bool = False,
@@ -258,7 +260,7 @@ def parse_web_page(driver,
         driver.quit()
 
 
-def update_data(data: Dict[str, ...], cat_id: int, is_search_items: bool, search_items):
+def update_data(data, cat_id: int, is_search_items: bool, search_items):
     """Функция ищет распарсенный объект в бд по уникальному id товара,
     если не находит, сохранет его, иначе обновляет данные товара"""
     res = convert_str_to_int(data)
@@ -315,7 +317,9 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
             send_users_msg_search_items(search_items, obj=obj)
     except Exception as ex:
         logger.error(f'Exception in save_data func {ex}')
-    logger.info('save_data Create Success')
+        logger.info('save_data Create FAIL')
+    else:
+        logger.info('save_data Create Success')
 
 
 def update_sold_items_in_category(cat_id: int):
