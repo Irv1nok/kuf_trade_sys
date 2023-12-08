@@ -250,7 +250,6 @@ def parse_web_page(driver,
             update_sold_items_in_category(cat_id)
             logger.exception(f'IndexError in parse_web_page func {ex}')
         else:
-            global RECURSION_COUNT
             if RECURSION_COUNT > 3:
                 raise Exception('MAX RECURSION COUNT')
             logger.info(f'Всего объявлений: {count_ads}')
