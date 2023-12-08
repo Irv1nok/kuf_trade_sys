@@ -26,7 +26,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
+RECURSION_COUNT = 0
 logger = logging.getLogger(__name__)
+
 
 
 def start_chrome_driver():
@@ -145,7 +147,6 @@ def parse_web_page(driver,
     all_null = SearchItems.objects.filter(category=cat_id, state__isnull=True)  # null - любое состояние.
     search_items = state | all_null
     is_search_items = search_items.exists()
-    print(search_items)
 
     if not update:
         WebDriverWait(driver, 10).until(
@@ -219,9 +220,13 @@ def parse_web_page(driver,
                         next_page = WebDriverWait(driver, 10).until(
                             EC.visibility_of_all_elements_located((By.XPATH, category['next_page'])))
                     except Exception as ex:
-                        logger.exception(f'Exception in parse_web_page -> next_page element not located {ex}'
-                                         f'\nRestart parse_web_page -> {category["name"]}')
+                        global RECURSION_COUNT
+                        if RECURSION_COUNT > 3:
+                            raise Exception('MAX RECURSION COUNT')
+                        logger.error(f'Exception in parse_web_page -> next_page element not located {ex}'
+                                     f'\nRestart parse_web_page -> {category["name"]}')
                         time.sleep(2)
+                        RECURSION_COUNT += 1
                         return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
                                               update=update)
                     else:
@@ -245,17 +250,21 @@ def parse_web_page(driver,
             update_sold_items_in_category(cat_id)
             logger.exception(f'IndexError in parse_web_page func {ex}')
         else:
+            global RECURSION_COUNT
+            if RECURSION_COUNT > 3:
+                raise Exception('MAX RECURSION COUNT')
             logger.info(f'Всего объявлений: {count_ads}')
-            logger.exception(f'Exception in parse_web_page -> Error in IndexError count_ad condition not pass {ex}'
-                             f'\nRestart parse_web_page -> {category["name"]}')
+            logger.error(f'Exception in parse_web_page -> Error in IndexError count_ad condition not pass {ex}'
+                         f'\nRestart parse_web_page -> {category["name"]}')
             cat.process_parse_url = None
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
             time.sleep(2)
+            RECURSION_COUNT += 1
             return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
                                   update=update)
     except Exception as ex:
-        logger.exception(f'Exception in parse_web_page func {ex}')
+        logger.error(f'Exception in parse_web_page func {ex}')
         driver.close()
         driver.quit()
 

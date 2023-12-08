@@ -139,8 +139,8 @@ def get_title(message):
                              reply_markup=markup, parse_mode="Markdown")
             bot.register_next_step_handler(message, get_title)
 
-    bot.send_message(message.from_user.id, '💬 Введите цену товара.'
-                                           '\nФормат: *Минимальная цена*(пробел)*Максимальная цена*'
+    bot.send_message(message.from_user.id, '💬 Введите цену товара. Формат:'
+                                           '\n*Минимальная цена*(пробел)*Максимальная цена*'
                                            '\nИли выберите в меню *Далее*',
                      reply_markup=markup, parse_mode="Markdown")
     bot.register_next_step_handler(message, get_price)

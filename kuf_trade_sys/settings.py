@@ -171,7 +171,7 @@ LOGGING = {
             "filters": ["require_debug_true"],
         },
         "parser.services_error": {
-            "handlers": ["console"],
+            "handlers": ["file"],
             "level": "ERROR",
         },
         "parser.views": {
