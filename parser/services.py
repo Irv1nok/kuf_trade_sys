@@ -84,6 +84,7 @@ def get_new_updates_in_categories():
 
 @background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
+    global RECURSION_COUNT
     cat = Category.objects.get(pk=cat_id)
     logger.info('Start DRIVER')
     driver = start_chrome_driver()
@@ -93,6 +94,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
         logger.info('url = URL_USED')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
         time.sleep(1)
+        RECURSION_COUNT = 0
         logger.info('url = URL_NEW')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
     else:
