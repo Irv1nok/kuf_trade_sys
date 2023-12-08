@@ -30,7 +30,6 @@ RECURSION_COUNT = 0
 logger = logging.getLogger(__name__)
 
 
-
 def start_chrome_driver():
     # fake useragent
     useragent = UserAgent()

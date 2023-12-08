@@ -150,43 +150,54 @@ LOGGING = {
         "require_debug_true": {
             "()": "django.utils.log.RequireDebugTrue",
         },
-    },
+
     "handlers": {
         "console": {
             "level": config("DJANGO_LOG_LEVEL_CONSOLE"),
-            "filters": ["require_debug_true"],
             "class": "logging.StreamHandler",
+            "filters": ["require_debug_true"],
         },
-        "file": {
+        "file_parser": {
             "level": "ERROR",
             "class": "logging.FileHandler",
             "formatter": "verbose",
-            "filename": BASE_DIR.joinpath("log/application.log"),
+            "filename": BASE_DIR.joinpath("log/parser.log"),
+        },
+        "file_db": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "formatter": "verbose",
+            "filename": BASE_DIR.joinpath("log/db.log"),
+        },
+        "file_bot": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "formatter": "verbose",
+            "filename": BASE_DIR.joinpath("log/bot.log"),
+        },
+        "file_django": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "formatter": "verbose",
+            "filename": BASE_DIR.joinpath("log/django.log"),
         }
     },
     "loggers": {
-        "parser.services": {
-            "handlers": ["console"],
+        "parser": {
+            "handlers": ["console", "file_parser"],
             "level": "DEBUG",
-            "filters": ["require_debug_true"],
         },
-        "parser.services_error": {
-            "handlers": ["file"],
+        "bot": {
+            "handlers": ["file_bot"],
             "level": "ERROR",
         },
-        "parser.views": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-            "filters": ["require_debug_true"],
-        },
-        "django.request": {
-            "handlers": ["file"],
-            "level": "DEBUG",
-            "propagate": False,
+        "django": {
+            "handlers": ["file_django"],
+            "level": "ERROR",
         },
         "django.db.backends": {
             "level": "ERROR",
-            "handlers": ["console", "file"],
+            "handlers": ["file_db"],
             "propagate": False,
         }
     }
