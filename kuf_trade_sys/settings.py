@@ -155,7 +155,7 @@ LOGGING = {
         "console": {
             "level": config("DJANGO_LOG_LEVEL_CONSOLE"),
             "class": "logging.StreamHandler",
-            "filters": ["require_debug_true"],
+            "filters": [],
         },
         "file_parser": {
             "level": "ERROR",

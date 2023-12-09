@@ -40,13 +40,11 @@ def start_chrome_driver():
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
     options.add_argument('window-size=1920,1080')
-    options.add_argument('start-maximized')
     options.add_argument('--blink-settings=imagesEnabled=false')  # Настройки хрома
-    options.add_experimental_option('excludeSwitches', ['enable-automation'])
-    options.add_argument('--disable-blink-features')
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_experimental_option('useAutomationExtension', False)
     # off errors in console
+    options.add_experimental_option('excludeSwitches', ['enable-automation'])
     options.add_experimental_option('excludeSwitches', ["enable-logging"])
 
     # driver
@@ -224,8 +222,8 @@ def parse_web_page(driver,
                         global RECURSION_COUNT
                         if RECURSION_COUNT > 3:
                             raise Exception('MAX RECURSION COUNT')
-                        logger.error(f'Exception in parse_web_page -> next_page element not located {ex}'
-                                     f'\nRestart parse_web_page -> {category["name"]}')
+                        logger.exception(f'Exception in parse_web_page -> next_page element not located {ex}'
+                                         f'\nRestart parse_web_page -> {category["name"]}')
                         time.sleep(2)
                         RECURSION_COUNT += 1
                         return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
@@ -254,8 +252,8 @@ def parse_web_page(driver,
             if RECURSION_COUNT > 3:
                 raise Exception('MAX RECURSION COUNT')
             logger.info(f'Всего объявлений: {count_ads}')
-            logger.error(f'Exception in parse_web_page -> Error in IndexError count_ad condition not pass {ex}'
-                         f'\nRestart parse_web_page -> {category["name"]}')
+            logger.exception(f'Exception in parse_web_page -> Error in IndexError count_ad condition not pass {ex}'
+                             f'\nRestart parse_web_page -> {category["name"]}')
             cat.process_parse_url = None
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
@@ -384,14 +382,15 @@ def send_users_msg_search_items(search_items, obj):
     for obj_search in search_items:
         if obj_search.title:
             res = []
-            if len(search_title := obj_search.title.lower().split()) > 1:
+            search_title = obj_search.title.lower().split()
+            if len(search_title) > 1:
                 obj_title = obj.title.lower().split()
                 for x in search_title:
                     if x.isdigit():
                         stat = [True if c == x else False for c in obj_title]
                         res.append(True if any(stat) else False)
 
-                    elif x in obj_title():
+                    elif x in obj.title:
                         res.append(True)
                     else:
                         res.append(False)
