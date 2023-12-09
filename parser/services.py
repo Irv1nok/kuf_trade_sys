@@ -131,9 +131,11 @@ def parse_web_page(driver,
                    update: bool = False,
                    test_conn: bool = False,
                    ):
-    first_page = True
+    global RECURSION_COUNT
     cat = Category.objects.get(pk=cat_id)
-    count_ad = cat.count_ad
+    count_ad = cat.count_ad  # Сколько объявлений прошел парсер
+    count_ads = 0  # Количество объявлениий данной категории
+    first_page = True
 
     if not update:
         if not cat.process_parse_url:
@@ -222,7 +224,6 @@ def parse_web_page(driver,
                         next_page = WebDriverWait(driver, 10).until(
                             EC.visibility_of_all_elements_located((By.XPATH, category['next_page'])))
                     except Exception as ex:
-                        global RECURSION_COUNT
                         if RECURSION_COUNT > 3:
                             raise Exception('MAX RECURSION COUNT')
                         logger.exception(f'Exception in parse_web_page -> next_page element not located {ex}'
@@ -393,14 +394,16 @@ def send_users_msg_search_items(search_items, obj):
                         stat = [True if c == x else False for c in obj_title]
                         res.append(True if any(stat) else False)
 
-                    elif x in obj.title:
+                    elif x in obj.title.lower():
                         res.append(True)
                     else:
                         res.append(False)
                 if all(res):
                     find_status[0] = True
-            elif search_title in obj.title.lower():
+            elif search_title[0] in obj.title.lower():
                 find_status[0] = True
+            else:
+                find_status[0] = False
         else:
             find_status[0] = True
 
