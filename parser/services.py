@@ -76,6 +76,7 @@ def get_new_updates_in_categories():
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id, url=cat.url_new)
     driver.close()
     driver.quit()
+    time.sleep(3)
     logger.info('Finish get_new_updates_in_categories')
 
 
@@ -97,9 +98,11 @@ def get_all_data_in_category(category: dict, cat_id: int):
     else:
         logger.info('url = PROCESS_PARSE_URL')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
-    logger.info(f'Finish get_all_data_in_category {category["name"]}')
+
     driver.close()
     driver.quit()
+    time.sleep(3)
+    logger.info(f'Finish get_all_data_in_category {category["name"]}')
 
 
 def get_test_data(category: dict, cat_id: int, test_conn: bool):
