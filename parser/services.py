@@ -26,7 +26,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-RECURSION_COUNT = 0
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +81,6 @@ def get_new_updates_in_categories():
 
 @background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
-    global RECURSION_COUNT
     cat = Category.objects.get(pk=cat_id)
     logger.info('Start DRIVER')
     driver = start_chrome_driver()
@@ -92,7 +90,6 @@ def get_all_data_in_category(category: dict, cat_id: int):
         logger.info('URL = URL_USED')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
         time.sleep(1)
-        RECURSION_COUNT = 0
         logger.info('URL = URL_NEW')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
     else:
@@ -101,7 +98,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     driver.close()
     driver.quit()
-    time.sleep(3)
+    time.sleep(3)  # Fix memory leak chrome_driver.
     logger.info(f'Finish get_all_data_in_category {category["name"]}')
 
 
@@ -112,7 +109,7 @@ def get_test_data(category: dict, cat_id: int, test_conn: bool):
 
 
 def save_cookies(driver, accept_button_class: str):
-    """сохранение и запись в файл cookies"""
+    """ Cохранение и запись в файл cookies """
     driver.get('https://www.kufar.by/l')
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH,
@@ -131,7 +128,7 @@ def parse_web_page(driver,
                    update: bool = False,
                    test_conn: bool = False,
                    ):
-    global RECURSION_COUNT
+
     cat = Category.objects.get(pk=cat_id)
     count_ad = cat.count_ad  # Сколько объявлений прошел парсер
     count_ads = 0  # Количество объявлениий данной категории
@@ -162,13 +159,13 @@ def parse_web_page(driver,
             count_ads = int(res1)
         except TypeError:
             logger.error('\n---------------------------------------------'
-                         'Exception in parse_web_page TypeError count_ads'
-                         '-----------------------------------------------')
+                         '\nException in parse_web_page TypeError count_ads'
+                         '\n---------------------------------------------')
             raise Exception
         except Exception as ex:
             logger.error('\n----------------------------------------------'
-                         f'Exception in parse_web_page find count_ads {ex}'
-                         '------------------------------------------------')
+                         f'\nException in parse_web_page find count_ads {ex}'
+                         '\n----------------------------------------------')
             raise Exception
 
     try:
@@ -221,32 +218,27 @@ def parse_web_page(driver,
                         logger.info('First page Next Page')
                     except Exception as ex:
                         logger.exception('\n---------------------------------------------------------------------------'
-                                         f'Exception in parse_web_page first_page -> next_page element not located {ex}'
-                                         f'Raise IndexError -> {category["name"]}'
-                                         '-----------------------------------------------------------------------------')
+                                         f'\nException in parse_web_page first_page -> next_page element not located {ex}'
+                                         f'\nRaise IndexError -> {category["name"]}'
+                                         '\n---------------------------------------------------------------------------')
                         raise IndexError
                 else:
                     try:
                         next_page = WebDriverWait(driver, 10).until(
-                            EC.visibility_of_all_elements_located((By.XPATH, category['next_page'])))
+                            EC.element_to_be_clickable((By.XPATH, category['next_page'])))
+
                     except Exception as ex:
-                        if RECURSION_COUNT > 3:
-                            raise Exception('MAX RECURSION COUNT')
                         logger.exception('\n--------------------------------------------------------------------------'
-                                         f'Exception in parse_web_page -> Error in next_page, element not located {ex}'
-                                         f'Restart parse_web_page -> {category["name"]}'
-                                         '----------------------------------------------------------------------------')
-                        time.sleep(2)
-                        RECURSION_COUNT += 1
-                        return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
-                                              update=update)
+                                         f'\nException in parse_web_page -> Error in next_page, element not located {ex}'
+                                         f'\nCategory -> {category["name"]}'
+                                         '\n--------------------------------------------------------------------------')
+                        raise IndexError
                     else:
                         cat.process_parse_url = driver.current_url
                         cat.count_ad = count_ad
                         cat.state = item_state
                         cat.save(update_fields=['process_parse_url', 'count_ad', 'state'])
-                        next_page[1].click()  # Raise IndexError когда доходит до последней страницы
-                        # назад и вперед одинаковые классы, берем второй
+                        next_page.click()
                         logger.info('Next Page')
             else:
                 return
@@ -260,35 +252,34 @@ def parse_web_page(driver,
             cat.save(update_fields=['process_parse_url', 'count_ad'])
             update_sold_items_in_category(cat_id)
             logger.exception('\n---------------------------------------------'
-                             f'Except IndexError in parse_web_page func: {ex}'
-                             '-----------------------------------------------')
+                             f'\nExcept IndexError in parse_web_page func: {ex}'
+                             '\n---------------------------------------------')
         else:
-            if RECURSION_COUNT > 3:
-                raise Exception('MAX RECURSION COUNT')
             logger.info(f'Всего объявлений: {count_ads}')
             logger.exception('\n--------------------------------------------------------------------------------------'
-                             f'Exception in parse_web_page -> Error in IndexError > (count_ad) condition not pass {ex}'
-                             f'Restart parse_web_page -> {category["name"]}'
-                             '----------------------------------------------------------------------------------------')
+                             f'\nException in parse_web_page -> Error in IndexError > (count_ad) condition not pass {ex}'
+                             f'\nRESCHEDULE parse_web_page -> {category["name"]}'
+                             '\n--------------------------------------------------------------------------------------')
             cat.process_parse_url = None
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
-            time.sleep(2)
-            RECURSION_COUNT += 1
-            return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
-                                  update=update)
+            time.sleep(1)
+            get_all_data_in_category(category=category, cat_id=cat_id, priority=1)
+
     except Exception as ex:
         driver.close()
         driver.quit()
         time.sleep(3)
         logger.exception('\n---------------------------------------------------------'
-                         f'Exception in parse_web_page func, Global Exception -> {ex}'
-                         '-----------------------------------------------------------')
+                         f'\nException in parse_web_page func, Global Exception -> {ex}'
+                         '\n---------------------------------------------------------')
 
 
 def update_data(data, cat_id: int, is_search_items: bool, search_items):
-    """Функция ищет распарсенный объект в бд по уникальному id товара,
-    если не находит, сохранет его, иначе обновляет данные товара"""
+    """
+    Функция ищет распарсенный объект в бд по уникальному id товара,
+    если не находит, сохранет его, иначе обновляет данные товара
+    """
     res = convert_str_to_int(data)
 
     try:
@@ -318,7 +309,7 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
 
 
 def convert_str_to_int(data: dict[str, any]):
-    """преобразует price и item_id в коллекции к int"""
+    """ Преобразует price и item_id в коллекции к int """
     if isinstance(data['price'], str) and isinstance(data['id_item'], str):
         price = ''.join(data['price'].strip(". pр").split())
         try:
@@ -333,7 +324,7 @@ def convert_str_to_int(data: dict[str, any]):
 
 
 def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_items):
-    """Сохраняет распарсенные данные в бд"""
+    """ Сохраняет распарсенные данные в бд """
     try:
         obj = KufarItems.objects.create(base_price=data['price'], cat_id=cat_id, city=data['city'],
                                         date=data['date'], id_item=data['id_item'], state=data['item_state'],
@@ -343,18 +334,20 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
             send_users_msg_search_items(search_items, obj=obj)
     except Exception as ex:
         logger.exception('\n--------------------------------'
-                         f'Exception in save_data func: {ex}'
-                         '----------------------------------')
+                         f'\nException in save_data func: {ex}'
+                         '\n--------------------------------')
         logger.info('Save_data Create FAIL')
     else:
         logger.info('Save_data Create Success')
 
 
 def update_sold_items_in_category(cat_id: int):
-    """Обновляет статус продано или нет товара в бд по временной дельте.
+    """
+    Обновляет статус продано или нет товара в бд по временной дельте.
     Если товар не обновлялся более 6 часов считаем его проданным
     Если товар был продан в промежутке между обновлениями, его статус time_update = null
-    сохраниться, считаем его проданным"""
+    сохраниться, считаем его проданным
+    """
 
     delta = timezone.now() - timedelta(hours=6)
     qs1 = KufarItems.objects.filter(cat_id=cat_id,
@@ -374,7 +367,7 @@ def update_sold_items_in_category(cat_id: int):
 
 
 def send_users_msg_sold_items(qs):
-    """Отправляем сообщение пользователю/ям что объект, добавленный в избранное, продан"""
+    """ Отправляем сообщение пользователю/ям что объект, добавленный в избранное, продан """
     qs_fav = qs.filter(in_favorites=True)
     if qs_fav.exists():
         for obj in qs_fav:
@@ -385,24 +378,31 @@ def send_users_msg_sold_items(qs):
                 logger.info('Send_users_msg_fav_items Success')
             except Exception as ex:
                 logger.exception('\n-------------------------------------------'
-                                 f'Exception in send_users_msg_sold_items: {ex}'
-                                 '---------------------------------------------')
+                                 f'\nException in send_users_msg_sold_items: {ex}'
+                                 '\n-------------------------------------------')
 
 
 def send_users_msg_fav_items(obj, update=False, sold=False):
-    """Отправляем сообщение пользователю/ям что у объекта, добавленного в избранное, изменилась цена"""
+    """
+    Отправляем сообщение пользователю/ям что у объекта,
+    добавленного в избранное, изменилась цена
+    """
+
     try:
         for pk in FavoritesItems.objects.filter(pk_item=obj.pk):
             send_message(pk.bot_user.telegram_id, obj=obj, update_fav_message=update, sold_item_message=sold)
             logger.info('send_message success in update_data func')
     except Exception as ex:
         logger.exception('\n---------------------------------------------------------'
-                         f'Exception in send_users_msg_fav_items (send_message): {ex}'
-                         '-----------------------------------------------------------')
+                         f'\nException in send_users_msg_fav_items (send_message): {ex}'
+                         '\n---------------------------------------------------------')
 
 
 def send_users_msg_search_items(search_items, obj):
-    """Отправляем сообщение пользователю/ям что у найден товар, добавленный в поиск"""
+    """
+    Отправляем сообщение пользователю/ям что у найден товар, добавленный в поиск
+    """
+
     for obj_search in search_items:
         find_status = [False, False, False]
         try:
@@ -430,8 +430,8 @@ def send_users_msg_search_items(search_items, obj):
                 find_status[0] = True
         except Exception as ex:
             logger.exception('\n--------------------------------------------------------'
-                             f'Exception in send_usr_msg_search_items step (title): {ex}'
-                             '----------------------------------------------------------')
+                             f'\nException in send_usr_msg_search_items step (title): {ex}'
+                             '\n--------------------------------------------------------')
         try:
             if obj_search.min_price and obj_search.max_price:
                 if obj_search.min_price <= obj.base_price <= obj_search.max_price:
@@ -440,8 +440,8 @@ def send_users_msg_search_items(search_items, obj):
                 find_status[1] = True
         except Exception as ex:
             logger.exception('\n--------------------------------------------------------'
-                             f'Exception in send_usr_msg_search_items step (price): {ex}'
-                             '----------------------------------------------------------')
+                             f'\nException in send_usr_msg_search_items step (price): {ex}'
+                             '\n--------------------------------------------------------')
         try:
             if obj_search.city:
                 if obj_search.city in obj.city:
@@ -450,12 +450,12 @@ def send_users_msg_search_items(search_items, obj):
                 find_status[2] = True
         except Exception as ex:
             logger.exception('\n-------------------------------------------------------'
-                             f'Exception in send_usr_msg_search_items step (city): {ex}'
-                             '---------------------------------------------------------')
+                             f'\nException in send_usr_msg_search_items step (city): {ex}'
+                             '\n-------------------------------------------------------')
         if all(find_status):
             try:
                 send_message(user_id=obj_search.bot_user.telegram_id, obj=obj, search_item_message=True)
             except Exception as ex:
                 logger.exception('\n------------------------------------------------------------------'
-                                 f'Exception in send_users_msg_search_items step (send_message):  {ex}'
-                                 '--------------------------------------------------------------------')
+                                 f'\nException in send_users_msg_search_items step (send_message):  {ex}'
+                                 '\n------------------------------------------------------------------')

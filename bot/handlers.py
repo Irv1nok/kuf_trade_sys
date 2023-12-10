@@ -305,7 +305,7 @@ def get_text_messages(message):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('fav'))
 def callback_favorites_inline(call):
-    """Обработка нажатий на инлайн клавиатуру(Добавить/удалить из Избранного)"""
+    """ Обработка нажатий на инлайн клавиатуру(Добавить/удалить из Избранного) """
     if call.data:
         cat, op, pk = call.data.split('|')
         user = BotUser.objects.get(telegram_id=call.from_user.id)
@@ -383,8 +383,3 @@ def callback_search_inline(call):
     user.save(update_fields=['slots_for_searchitems'])
     bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id)
     bot.send_message(chat_id=call.from_user.id, text=f'💬 Готово, доступно слотов {user.slots_for_searchitems}')
-
-
-bot_command_menu = {'/start': start, '/favorites': show_favorites, '/register': register_user,
-                    '/account': account, '/help': show_help,
-                    '🔙 Главное меню': get_text_messages}

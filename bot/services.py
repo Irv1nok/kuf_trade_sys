@@ -27,14 +27,13 @@ def send_error_msg_not_registered(message):
 def send_message(user_id: int,
                  obj,
                  show_sold_items: bool = False,  # Режим отображения проданных товаров.
-                 update_fav_message: bool = False,
-                 # Функция вызвана из parser/services/update_data, найдено изменение цены.
-                 search_item_message: bool = False,
-                 # Функция вызвана из parser/services/update_data, найдено объявление.
+                 update_fav_message: bool = False,  # Функция вызвана из parser/services/update_data, найдено изменение цены.
+                 search_item_message: bool = False,  # Функция вызвана из parser/services/update_data, найдено объявление.
                  favorites: bool = False,  # Функциия вызвана из handlers/show_favorites
                  sold_item_message: bool = False
                  ):
-    """Функция отправки сообщения пользователю."""
+    """ Функция отправки сообщения пользователю """
+
     if obj.new_price:
         if obj.new_price > obj.base_price:
             new_price = f'{obj.new_price} 🔺'
