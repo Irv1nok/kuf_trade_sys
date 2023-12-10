@@ -317,6 +317,7 @@ def query_data(message, qs_generator):
             bot.send_message(message.from_user.id, '💬 *Ошибка!* Попробуйте еще раз.'
                                                    '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help',
                              reply_markup=reply_keyboard_back_gen_menu(), parse_mode="Markdown")
+            return
 
     markup.add(f'Показать еще {user_data.msg_quantity}', '🔙 Главное меню')
     msg = bot.reply_to(message, '💬 Показать еще или вернуться в главное меню? ', reply_markup=markup)
