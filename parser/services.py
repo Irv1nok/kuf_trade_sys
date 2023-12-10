@@ -89,14 +89,14 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     logger.info(f'Start get_all_data_in_category {category["name"]}')
     if not cat.process_parse_url:
-        logger.info('url = URL_USED')
+        logger.info('URL = URL_USED')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
         time.sleep(1)
         RECURSION_COUNT = 0
-        logger.info('url = URL_NEW')
+        logger.info('URL = URL_NEW')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
     else:
-        logger.info('url = PROCESS_PARSE_URL')
+        logger.info('URL = PROCESS_PARSE_URL')
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
 
     driver.close()
@@ -161,10 +161,14 @@ def parse_web_page(driver,
             res1 = ''.join(res.split()[:-1])
             count_ads = int(res1)
         except TypeError:
-            logger.error('Exception in parse_web_page TypeError count_ads')
+            logger.error('\n---------------------------------------------'
+                         'Exception in parse_web_page TypeError count_ads'
+                         '-----------------------------------------------')
             raise Exception
         except Exception as ex:
-            logger.error(f'Exception in parse_web_page find count_ads {ex}')
+            logger.error('\n----------------------------------------------'
+                         f'Exception in parse_web_page find count_ads {ex}'
+                         '------------------------------------------------')
             raise Exception
 
     try:
@@ -216,8 +220,10 @@ def parse_web_page(driver,
                         first_page = False
                         logger.info('First page Next Page')
                     except Exception as ex:
-                        logger.exception(f'Exception in parse_web_page first_page -> next_page element not located {ex}'
-                                         f'\nRaise IndexError -> {category["name"]}')
+                        logger.exception('\n---------------------------------------------------------------------------'
+                                         f'Exception in parse_web_page first_page -> next_page element not located {ex}'
+                                         f'Raise IndexError -> {category["name"]}'
+                                         '-----------------------------------------------------------------------------')
                         raise IndexError
                 else:
                     try:
@@ -226,8 +232,10 @@ def parse_web_page(driver,
                     except Exception as ex:
                         if RECURSION_COUNT > 3:
                             raise Exception('MAX RECURSION COUNT')
-                        logger.exception(f'Exception in parse_web_page -> next_page element not located {ex}'
-                                         f'\nRestart parse_web_page -> {category["name"]}')
+                        logger.exception('\n--------------------------------------------------------------------------'
+                                         f'Exception in parse_web_page -> Error in next_page, element not located {ex}'
+                                         f'Restart parse_web_page -> {category["name"]}'
+                                         '----------------------------------------------------------------------------')
                         time.sleep(2)
                         RECURSION_COUNT += 1
                         return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
@@ -251,13 +259,17 @@ def parse_web_page(driver,
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
             update_sold_items_in_category(cat_id)
-            logger.exception(f'IndexError in parse_web_page func {ex}')
+            logger.exception('\n---------------------------------------------'
+                             f'Except IndexError in parse_web_page func: {ex}'
+                             '-----------------------------------------------')
         else:
             if RECURSION_COUNT > 3:
                 raise Exception('MAX RECURSION COUNT')
             logger.info(f'Всего объявлений: {count_ads}')
-            logger.exception(f'Exception in parse_web_page -> Error in IndexError count_ad condition not pass {ex}'
-                             f'\nRestart parse_web_page -> {category["name"]}')
+            logger.exception('\n--------------------------------------------------------------------------------------'
+                             f'Exception in parse_web_page -> Error in IndexError > (count_ad) condition not pass {ex}'
+                             f'Restart parse_web_page -> {category["name"]}'
+                             '----------------------------------------------------------------------------------------')
             cat.process_parse_url = None
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
@@ -266,9 +278,12 @@ def parse_web_page(driver,
             return parse_web_page(driver=driver, category=category, cat_id=cat_id, url=url,
                                   update=update)
     except Exception as ex:
-        logger.error(f'Exception in parse_web_page func {ex}')
         driver.close()
         driver.quit()
+        time.sleep(3)
+        logger.exception('\n---------------------------------------------------------'
+                         f'Exception in parse_web_page func, Global Exception -> {ex}'
+                         '-----------------------------------------------------------')
 
 
 def update_data(data, cat_id: int, is_search_items: bool, search_items):
@@ -289,7 +304,7 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
         # Отправляем сообщения всем пользователям у кого данный товар в избранном.
         if obj.in_favorites:  # Если присутствует запрос отслеживания товара
             send_users_msg_fav_items(obj=obj, update=True)
-        logger.info('update_data save new_price success')
+        logger.info('Update_data save new_price success')
 
     obj.title = res['title']
     obj.city = res['city']
@@ -299,7 +314,7 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
     obj.time_update = timezone.now()
     obj.photo_url = res['photo']
     obj.save()
-    logger.info('update_data Update success')
+    logger.info('Update_data Update success')
 
 
 def convert_str_to_int(data: dict[str, any]):
@@ -311,7 +326,7 @@ def convert_str_to_int(data: dict[str, any]):
             try:
                 data['id_item'] = int(data['id_item'])
             except ValueError as ex:
-                logger.error(f'{data["id_item"]} ошибка формата входных данных {ex}')
+                logger.error(f'{data["id_item"]} Ошибка формата входных данных: {ex}')
         except ValueError:
             data['price'] = 0
     return data
@@ -327,10 +342,12 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
         if is_search_items:  # Если прустствует запрос поиска товара в данной категории
             send_users_msg_search_items(search_items, obj=obj)
     except Exception as ex:
-        logger.error(f'Exception in save_data func {ex}')
-        logger.info('save_data Create FAIL')
+        logger.exception('\n--------------------------------'
+                         f'Exception in save_data func: {ex}'
+                         '----------------------------------')
+        logger.info('Save_data Create FAIL')
     else:
-        logger.info('save_data Create Success')
+        logger.info('Save_data Create Success')
 
 
 def update_sold_items_in_category(cat_id: int):
@@ -351,9 +368,9 @@ def update_sold_items_in_category(cat_id: int):
     if qs.exists():
         send_users_msg_sold_items(qs)
         qs.update(deleted=True)
-        logger.info(f'delta {delta}, update_sold_items_in_category SUCCESS')
+        logger.info(f'Delta {delta}, update_sold_items_in_category SUCCESS')
     else:
-        logger.info('update_sold_items_in_category FALSE, no one obj in QuerySet')
+        logger.info('Update_sold_items_in_category FALSE, no one obj in QuerySet')
 
 
 def send_users_msg_sold_items(qs):
@@ -367,7 +384,9 @@ def send_users_msg_sold_items(qs):
                 obj.save(update_fields=['in_favorites'])
                 logger.info('Send_users_msg_fav_items Success')
             except Exception as ex:
-                logger.error(f'Exception in update_sold_items_in_category {ex}')
+                logger.exception('\n-------------------------------------------'
+                                 f'Exception in send_users_msg_sold_items: {ex}'
+                                 '---------------------------------------------')
 
 
 def send_users_msg_fav_items(obj, update=False, sold=False):
@@ -377,50 +396,66 @@ def send_users_msg_fav_items(obj, update=False, sold=False):
             send_message(pk.bot_user.telegram_id, obj=obj, update_fav_message=update, sold_item_message=sold)
             logger.info('send_message success in update_data func')
     except Exception as ex:
-        logger.error(f'Exception in update_data func send_message Error {ex}')
+        logger.exception('\n---------------------------------------------------------'
+                         f'Exception in send_users_msg_fav_items (send_message): {ex}'
+                         '-----------------------------------------------------------')
 
 
 def send_users_msg_search_items(search_items, obj):
     """Отправляем сообщение пользователю/ям что у найден товар, добавленный в поиск"""
     find_status = [False, False, False]
     for obj_search in search_items:
-        if obj_search.title:
-            res = []
-            search_title = obj_search.title.lower().split()
-            if len(search_title) > 1:
-                obj_title = obj.title.lower().split()
-                for x in search_title:
-                    if x.isdigit():
-                        stat = [True if c == x else False for c in obj_title]
-                        res.append(True if any(stat) else False)
+        try:
+            if obj_search.title:
+                res = []
+                search_title = obj_search.title.lower().split()
+                if len(search_title) > 1:
+                    obj_title = obj.title.lower().split()
+                    for x in search_title:
+                        if x.isdigit():
+                            stat = [True if c == x else False for c in obj_title]
+                            res.append(True if any(stat) else False)
 
-                    elif x in obj.title.lower():
-                        res.append(True)
-                    else:
-                        res.append(False)
-                if all(res):
+                        elif x in obj.title.lower():
+                            res.append(True)
+                        else:
+                            res.append(False)
+                    if all(res):
+                        find_status[0] = True
+                elif search_title[0] in obj.title.lower():
                     find_status[0] = True
-            elif search_title[0] in obj.title.lower():
-                find_status[0] = True
+                else:
+                    find_status[0] = False
             else:
-                find_status[0] = False
-        else:
-            find_status[0] = True
-
-        if obj_search.min_price and obj_search.max_price:
-            if obj_search.min_price <= obj.base_price <= obj_search.max_price:
+                find_status[0] = True
+        except Exception as ex:
+            logger.exception('\n--------------------------------------------------------'
+                             f'Exception in send_usr_msg_search_items step (title): {ex}'
+                             '----------------------------------------------------------')
+        try:
+            if obj_search.min_price and obj_search.max_price:
+                if obj_search.min_price <= obj.base_price <= obj_search.max_price:
+                    find_status[1] = True
+            else:
                 find_status[1] = True
-        else:
-            find_status[1] = True
-
-        if obj_search.city:
-            if obj_search.city in obj.city:
+        except Exception as ex:
+            logger.exception('\n--------------------------------------------------------'
+                             f'Exception in send_usr_msg_search_items step (price): {ex}'
+                             '----------------------------------------------------------')
+        try:
+            if obj_search.city:
+                if obj_search.city in obj.city:
+                    find_status[2] = True
+            else:
                 find_status[2] = True
-        else:
-            find_status[2] = True
-
+        except Exception as ex:
+            logger.exception('\n-------------------------------------------------------'
+                             f'Exception in send_usr_msg_search_items step (city): {ex}'
+                             '---------------------------------------------------------')
         if all(find_status):
             try:
                 send_message(user_id=obj_search.bot_user.telegram_id, obj=obj, search_item_message=True)
             except Exception as ex:
-                logger.error(f'Exception in send_users_msg_search_items func send_message Error {ex}')
+                logger.exception('\n------------------------------------------------------------------'
+                                 f'Exception in send_users_msg_search_items step (send_message):  {ex}'
+                                 '--------------------------------------------------------------------')
