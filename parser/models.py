@@ -5,7 +5,7 @@ from django.urls import reverse
 class KufarItems(models.Model):
 
     base_price = models.IntegerField(verbose_name='Стартовая цена')
-    cat = models.ForeignKey('Category', null=True, db_index=True, on_delete=models.PROTECT, verbose_name='Категория')
+    cat = models.ForeignKey('Category', null=True, db_index=True, on_delete=models.SET_NULL, verbose_name='Категория')
     city = models.CharField(max_length=30, verbose_name='Город')
     date = models.CharField(max_length=20, null=True, verbose_name='Дата в объявлении')
     deleted = models.BooleanField(default=False, verbose_name='Продано или нет')

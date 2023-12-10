@@ -260,9 +260,9 @@ def parse_web_page(driver,
                              f'\nException in parse_web_page -> Error in IndexError > (count_ad) condition not pass {ex}'
                              f'\nRESCHEDULE parse_web_page -> {category["name"]}'
                              '\n--------------------------------------------------------------------------------------')
-            cat.process_parse_url = None
-            cat.count_ad = 0
-            cat.save(update_fields=['process_parse_url', 'count_ad'])
+            # cat.process_parse_url = None
+            # cat.count_ad = 0
+            # cat.save(update_fields=['process_parse_url', 'count_ad'])
             time.sleep(1)
             get_all_data_in_category(category=category, cat_id=cat_id, priority=1)
 
@@ -298,7 +298,6 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
         logger.info('Update_data save new_price success')
 
     obj.title = res['title']
-    obj.city = res['city']
     obj.date = res['date']
     obj.deleted = False
     obj.state = res['item_state']
