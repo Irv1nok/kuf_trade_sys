@@ -1,13 +1,13 @@
 import logging
 
-from telebot.apihelper import ApiTelegramException
-
 from bot.bot_config import user_data
 from bot.keyboards.replykeyoboards import reply_keyboard_back_gen_menu
 
 from decouple import config
 
 from telebot import TeleBot, types
+from telebot.apihelper import ApiTelegramException
+
 
 logger = logging.getLogger(__name__)
 bot = TeleBot(config('BOT_TOKEN'))
@@ -43,7 +43,7 @@ def send_message(user_id: int,
     else:
         new_price = 'Нет'
 
-    if user_data.user_registered:
+    if user_data.user_registered or search_item_message:
         markup = types.InlineKeyboardMarkup()
         if not show_sold_items:
             if not favorites:
@@ -72,7 +72,7 @@ def send_message(user_id: int,
                        parse_mode='HTML',
                        reply_markup=markup if user_data.user_registered else None)
 
-    except ApiTelegramException as ex:
+    except ApiTelegramException as ex:  # Ошибки с url фото
         logger.exception(f'send_photo Error -> {ex}')
         obj.photo_url = ''
         send_message(user_id=user_id,

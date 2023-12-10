@@ -403,8 +403,8 @@ def send_users_msg_fav_items(obj, update=False, sold=False):
 
 def send_users_msg_search_items(search_items, obj):
     """Отправляем сообщение пользователю/ям что у найден товар, добавленный в поиск"""
-    find_status = [False, False, False]
     for obj_search in search_items:
+        find_status = [False, False, False]
         try:
             if obj_search.title:
                 res = []
