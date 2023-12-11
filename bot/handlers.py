@@ -1,16 +1,16 @@
 import logging
 from collections import Counter
-
-from django.db import IntegrityError
 from parser.models import Category, KufarItems
 
 from bot.bot_config import bot, bot_sub_menu, user_data
 from bot.keyboards.inlinekeyboards import inline_keyboard_delete_search_item
 from bot.keyboards.replykeyoboards import (reply_keyboard_back_gen_menu,
                                            reply_keyboard_back_gen_menu_and_next)
-from bot.middlewares import get_query, get_category_from_bd
+from bot.middlewares import get_category_from_bd, get_query
 from bot.models import BotUser, FavoritesItems, SearchItems
 from bot.services import send_error_msg_not_registered, send_message
+
+from django.db import IntegrityError
 
 from telebot import types
 
@@ -165,7 +165,7 @@ def show_help(message):
     bot.send_message(message.from_user.id,
                      text='💬 Бот находится в стадии разработки, '
                           'в случае любых сложностей перезапустите бота '
-                          'или свяжитесь с разработчиком --> @Irvin_ok, '
+                          'или свяжитесь с разработчиком --> @Irv1n_TM, '
                           'в сообщении опишите цепочку действий, которая '
                           'привела к сообщению об ошибке. '
                           'Так же принимаются пожелания по улучшению.',
@@ -177,7 +177,7 @@ def get_text_messages(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     if message.text == 'Компьютерная техника. 🖥':
         btn1 = types.KeyboardButton('Ноутбуки. 💻')
-        btn2 = types.KeyboardButton('Компьютеры. 💾')
+        btn2 = types.KeyboardButton('Компьютеры. 📺')
         btn3 = types.KeyboardButton('Мониторы. 🖥')
         btn4 = types.KeyboardButton('Комплектующие. ⚙️')
         btn5 = types.KeyboardButton('Оргтехника. 🖨')
@@ -280,11 +280,11 @@ def get_text_messages(message):
 
     elif message.text in bot_sub_menu:
         user_data.category = get_category_from_bd(message)
-        btn1 = types.KeyboardButton('Показать объявления')
-        btn2 = types.KeyboardButton('Поиск по фильтру')
-        btn3 = types.KeyboardButton('Показать проданные объявления')
-        btn4 = types.KeyboardButton('Узнать цену')
-        btn5 = types.KeyboardButton('Задать авто. поиск по параметрам')
+        btn1 = types.KeyboardButton('Показать объявления 🪧')
+        btn2 = types.KeyboardButton('Поиск по фильтру 🔎')
+        btn3 = types.KeyboardButton('Показать проданные объявления 💸')
+        btn4 = types.KeyboardButton('Узнать цену 📊')
+        btn5 = types.KeyboardButton('Задать авто. поиск по параметрам 📩')
         btn6 = types.KeyboardButton('🔙 Главное меню')
         markup.row(btn1, btn2)
         markup.row(btn3, btn4)

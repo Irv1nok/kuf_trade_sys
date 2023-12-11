@@ -35,8 +35,9 @@ def start_chrome_driver():
     options = webdriver.ChromeOptions()
     options.add_argument(f'--user-agent={useragent.random}')
     options.add_argument('--no-sandbox')
-    options.add_argument('--headless=new')  # Безоконный режим
+    # options.add_argument('--headless=new')  # Безоконный режим
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-crash-reporter')
     options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
     options.add_argument('window-size=1920,1080')
     options.add_argument('--blink-settings=imagesEnabled=false')  # Настройки хрома
@@ -75,7 +76,7 @@ def get_new_updates_in_categories():
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id, url=cat.url_new)
     driver.close()
     driver.quit()
-    time.sleep(3)
+    time.sleep(3)  # Иногда, по неизвестной причине не успевала освободиться память.
     logger.info('Finish get_new_updates_in_categories')
 
 
@@ -98,7 +99,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     driver.close()
     driver.quit()
-    time.sleep(3)  # Fix memory leak chrome_driver.
+    time.sleep(3)  # Иногда, по неизвестной причине не успевала освободиться память.
     logger.info(f'Finish get_all_data_in_category {category["name"]}')
 
 
@@ -236,8 +237,11 @@ def parse_web_page(driver,
                     else:
                         cat.process_parse_url = driver.current_url
                         cat.count_ad = count_ad
-                        cat.state = item_state
-                        cat.save(update_fields=['process_parse_url', 'count_ad', 'state'])
+                        cat.save(update_fields=['process_parse_url', 'count_ad'])
+                        if count_ad > 19000 and not cat.process_parse_url:
+                            # Перезапуск парсера во избежание
+                            # большого потребления памяти chrome.
+                            raise IndexError
                         next_page.click()
                         logger.info('Next Page')
             else:
@@ -260,10 +264,6 @@ def parse_web_page(driver,
                              f'\nException in parse_web_page -> Error in IndexError > (count_ad) condition not pass {ex}'
                              f'\nRESCHEDULE parse_web_page -> {category["name"]}'
                              '\n--------------------------------------------------------------------------------------')
-            # cat.process_parse_url = None
-            # cat.count_ad = 0
-            # cat.save(update_fields=['process_parse_url', 'count_ad'])
-            time.sleep(1)
             get_all_data_in_category(category=category, cat_id=cat_id, priority=1)
 
     except Exception as ex:
@@ -280,7 +280,7 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
     Функция ищет распарсенный объект в бд по уникальному id товара,
     если не находит, сохранет его, иначе обновляет данные товара
     """
-    res = convert_str_to_int(data)
+    res = convert_price_str_to_int(data)
 
     try:
         obj = KufarItems.objects.get(id_item=res['id_item'], cat_id=cat_id)
@@ -307,7 +307,7 @@ def update_data(data, cat_id: int, is_search_items: bool, search_items):
     logger.info('Update_data Update success')
 
 
-def convert_str_to_int(data: dict[str, any]):
+def convert_price_str_to_int(data: dict[str, any]):
     """ Преобразует price и item_id в коллекции к int """
     if isinstance(data['price'], str) and isinstance(data['id_item'], str):
         price = ''.join(data['price'].strip(". pр").split())

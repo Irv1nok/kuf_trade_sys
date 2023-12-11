@@ -38,7 +38,7 @@ def get_query(message):
         return bot.send_message(message.from_user.id, '👀 *Выберите* интересующий вас раздел',
                                 reply_markup=markup, parse_mode='Markdown')
 
-    if message.text == 'Показать проданные объявления':
+    if message.text == 'Показать проданные объявления 💸':
         user_data.deleted = True
         markup_inline = keyboards_cats[user_data.category]
         bot.send_message(message.from_user.id, '💬 *Введите* название товара или *выберите*.',
@@ -48,7 +48,7 @@ def get_query(message):
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
 
-    elif message.text == 'Поиск по фильтру':
+    elif message.text == 'Поиск по фильтру 🔎':
         markup_inline = keyboards_cats[user_data.category]
         bot.send_message(message.from_user.id, '💬 *Введите* название товара или выберите.',
                          reply_markup=markup_inline, parse_mode='Markdown')
@@ -57,7 +57,7 @@ def get_query(message):
                          reply_markup=markup, parse_mode='Markdown')
         bot.register_next_step_handler(message, get_title)
 
-    elif message.text == 'Задать авто. поиск по параметрам':
+    elif message.text == 'Задать авто. поиск по параметрам 📩':
         markup = reply_keyboard_back_gen_menu()
         user = BotUser.objects.get(telegram_id=message.from_user.id)
         if user_data.user_registered:
@@ -75,7 +75,7 @@ def get_query(message):
         else:
             return send_error_msg_not_registered(message)
 
-    elif message.text == 'Показать объявления':
+    elif message.text == 'Показать объявления 🪧':
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
         btn1 = types.KeyboardButton('5')
         btn2 = types.KeyboardButton('10')
@@ -90,7 +90,7 @@ def get_query(message):
                          parse_mode="Markdown")
         bot.register_next_step_handler(message, get_message_quantity)
 
-    elif message.text == 'Узнать цену':
+    elif message.text == 'Узнать цену 📊':
         markup = reply_keyboard_back_gen_menu()
         bot.send_message(message.from_user.id, 'Введите название товара', reply_markup=markup)
         bot.register_next_step_handler(message, check_price_step2)
