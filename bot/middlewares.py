@@ -320,8 +320,8 @@ def query_data(message, qs_generator):
             return
 
     markup.add(f'Показать еще {user_data.msg_quantity}', '🔙 Главное меню')
-    msg = bot.reply_to(message, '💬 Показать еще или вернуться в главное меню? ', reply_markup=markup)
-    bot.register_next_step_handler(msg, query_data, qs_generator)
+    bot.send_message(message.from_user.id, '💬 Показать еще или вернуться в главное меню?', reply_markup=markup)
+    bot.register_next_step_handler(message, query_data, qs_generator)
 
 
 def init_qs_generator(qs):

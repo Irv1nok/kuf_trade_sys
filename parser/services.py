@@ -35,10 +35,10 @@ def start_chrome_driver():
     options = webdriver.ChromeOptions()
     options.add_argument(f'--user-agent={useragent.random}')
     options.add_argument('--no-sandbox')
-    # options.add_argument('--headless=new')  # Безоконный режим
+    options.add_argument('--headless=new')  # Безоконный режим
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-crash-reporter')
-    options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
+    # options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
     options.add_argument('window-size=1920,1080')
     options.add_argument('--blink-settings=imagesEnabled=false')  # Настройки хрома
     options.add_argument('--disable-blink-features=AutomationControlled')
@@ -76,7 +76,7 @@ def get_new_updates_in_categories():
         parse_web_page(driver=driver, update=update, category=cat.__dict__, cat_id=cat.id, url=cat.url_new)
     driver.close()
     driver.quit()
-    time.sleep(3)  # Иногда, по неизвестной причине не успевала освободиться память.
+    time.sleep(3)  # По неизвестной причине не освобождается память.
     logger.info('Finish get_new_updates_in_categories')
 
 
@@ -87,20 +87,19 @@ def get_all_data_in_category(category: dict, cat_id: int):
     driver = start_chrome_driver()
 
     logger.info(f'Start get_all_data_in_category {category["name"]}')
-    if not cat.process_parse_url:
-        logger.info('URL = URL_USED')
-        parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
-        time.sleep(1)
-        logger.info('URL = URL_NEW')
+    status = 'RESCHEDULE'
+
+    res = parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
+    time.sleep(1)
+    if res[0] and not res[1]:  # [0] статус выполнения True/False, [1] б/у или новые
         parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
-    else:
-        logger.info('URL = PROCESS_PARSE_URL')
-        parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
+    if res[0]:
+        status = 'SUCCESS'
 
     driver.close()
     driver.quit()
     time.sleep(3)  # Иногда, по неизвестной причине не успевала освободиться память.
-    logger.info(f'Finish get_all_data_in_category {category["name"]}')
+    logger.info(f'{status} get_all_data_in_category {category["name"]}')
 
 
 def get_test_data(category: dict, cat_id: int, test_conn: bool):
@@ -258,6 +257,7 @@ def parse_web_page(driver,
             logger.exception('\n---------------------------------------------'
                              f'\nExcept IndexError in parse_web_page func: {ex}'
                              '\n---------------------------------------------')
+            return True, item_state
         else:
             logger.info(f'Всего объявлений: {count_ads}')
             logger.exception('\n--------------------------------------------------------------------------------------'
@@ -265,6 +265,7 @@ def parse_web_page(driver,
                              f'\nRESCHEDULE parse_web_page -> {category["name"]}'
                              '\n--------------------------------------------------------------------------------------')
             get_all_data_in_category(category=category, cat_id=cat_id, priority=1)
+            return False, item_state
 
     except Exception as ex:
         driver.close()
@@ -273,6 +274,7 @@ def parse_web_page(driver,
         logger.exception('\n---------------------------------------------------------'
                          f'\nException in parse_web_page func, Global Exception -> {ex}'
                          '\n---------------------------------------------------------')
+        return False, item_state
 
 
 def update_data(data, cat_id: int, is_search_items: bool, search_items):
