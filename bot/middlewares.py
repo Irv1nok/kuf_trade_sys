@@ -306,7 +306,7 @@ def query_data(message, qs_generator):
                          show_sold_items=user_data.deleted)
 
             count += 1
-            time.sleep(0.2)
+            time.sleep(0.4)
         except StopIteration:
             bot.send_message(message.from_user.id, '💬 Больше нет объявлений 👀',
                              reply_markup=reply_keyboard_back_gen_menu())

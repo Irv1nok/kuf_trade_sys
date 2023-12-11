@@ -38,7 +38,7 @@ def start_chrome_driver():
     options.add_argument('--headless=new')  # Безоконный режим
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-crash-reporter')
-    # options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
+    options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
     options.add_argument('window-size=1920,1080')
     options.add_argument('--blink-settings=imagesEnabled=false')  # Настройки хрома
     options.add_argument('--disable-blink-features=AutomationControlled')
@@ -98,7 +98,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     driver.close()
     driver.quit()
-    time.sleep(3)  # Иногда, по неизвестной причине не успевала освободиться память.
+    time.sleep(2)  # Иногда, по неизвестной причине не успевала освободиться память.
     logger.info(f'{status} get_all_data_in_category {category["name"]}')
 
 
@@ -150,7 +150,7 @@ def parse_web_page(driver,
     is_search_items = search_items.exists()
 
     if not update:
-        WebDriverWait(driver, 10).until(
+        WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, category['count_ads'])))
         try:
             res = driver.find_element(
@@ -212,7 +212,7 @@ def parse_web_page(driver,
             if not update and not test_conn:
                 if first_page and not cat.process_parse_url:  # Переход на след. страницу.
                     try:
-                        WebDriverWait(driver, 10).until(
+                        WebDriverWait(driver, 2).until(
                             EC.element_to_be_clickable((By.XPATH, category['next_page']))).click()
                         first_page = False
                         logger.info('First page Next Page')
@@ -224,7 +224,7 @@ def parse_web_page(driver,
                         raise IndexError
                 else:
                     try:
-                        next_page = WebDriverWait(driver, 10).until(
+                        next_page = WebDriverWait(driver, 2).until(
                             EC.element_to_be_clickable((By.XPATH, category['next_page'])))
 
                     except Exception as ex:
@@ -270,7 +270,7 @@ def parse_web_page(driver,
     except Exception as ex:
         driver.close()
         driver.quit()
-        time.sleep(3)
+        time.sleep(2)
         logger.exception('\n---------------------------------------------------------'
                          f'\nException in parse_web_page func, Global Exception -> {ex}'
                          '\n---------------------------------------------------------')
