@@ -80,7 +80,7 @@ def get_new_updates_in_categories():
     logger.info('Finish get_new_updates_in_categories')
 
 
-# @background(schedule=60)
+@background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
     cat = Category.objects.get(pk=cat_id)
     logger.info('Start DRIVER')
