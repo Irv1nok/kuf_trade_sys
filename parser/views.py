@@ -40,8 +40,8 @@ def parse_pages(request):
                 del cat.__dict__['_state']  # <-- Вызывает background tasks json data error.
                 get_all_data_in_category(category=cat.__dict__,
                                          cat_id=cat.id,
-                                         schedule=20,
-                                         repeat=Task.HOURS3
+                                         # schedule=20,
+                                         # repeat=Task.HOURS3
                                          )  # Парсинг всех данных , schedule=10, repeat=10800
                 messages.success(request, 'Сохранено')
 

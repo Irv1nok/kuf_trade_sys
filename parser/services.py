@@ -80,7 +80,7 @@ def get_new_updates_in_categories():
     logger.info('Finish get_new_updates_in_categories')
 
 
-@background(schedule=60)
+# @background(schedule=60)
 def get_all_data_in_category(category: dict, cat_id: int):
     cat = Category.objects.get(pk=cat_id)
     logger.info('Start DRIVER')
@@ -91,10 +91,11 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     res = parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
     time.sleep(1)
-    if res[0] and not res[1]:  # [0] статус выполнения True/False, [1] б/у или новые
-        parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
+    if res[0] and not res[1]:  # [0] статус выполнения True/False, [1] True/False новые/б/у
+        res = parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
     if res[0]:
         status = 'SUCCESS'
+        update_sold_items_in_category(cat_id)
 
     driver.close()
     driver.quit()
@@ -213,6 +214,7 @@ def parse_web_page(driver,
             if not update and not test_conn:
                 if first_page and not cat.process_parse_url:  # Переход на след. страницу.
                     try:
+                        cat.process_parse_url = driver.current_url
                         WebDriverWait(driver, 2).until(
                             EC.element_to_be_clickable((By.XPATH, category['next_page']))).click()
                         first_page = False
@@ -257,7 +259,6 @@ def parse_web_page(driver,
             cat.process_parse_url = None
             cat.count_ad = 0
             cat.save(update_fields=['process_parse_url', 'count_ad'])
-            update_sold_items_in_category(cat_id)
             logger.exception('\n---------------------------------------------'
                              f'\nExcept IndexError in parse_web_page func: {ex}'
                              '\n---------------------------------------------')
