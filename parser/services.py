@@ -132,6 +132,7 @@ def parse_web_page(driver,
     cat = Category.objects.get(pk=cat_id)
     count_ad = cat.count_ad  # Сколько объявлений прошел парсер
     count_ads = 0  # Количество объявлениий данной категории
+    page_number = 1
     first_page = True
 
     if not update:
@@ -237,12 +238,15 @@ def parse_web_page(driver,
                         cat.process_parse_url = driver.current_url
                         cat.count_ad = count_ad
                         cat.save(update_fields=['process_parse_url', 'count_ad'])
-                        if count_ad > 19000 and not cat.process_parse_url:
+                        if page_number == 380:
                             # Перезапуск парсера во избежание
                             # большого потребления памяти chrome.
+                            logger.error(f'Max page achieved. Reschedule parser {cat.name}')
                             raise IndexError
                         next_page.click()
                         logger.info('Next Page')
+                        page_number += 1
+                        logger.info(f'PAGE NUMBER {page_number}')
             else:
                 return
 
@@ -345,12 +349,12 @@ def save_data(data: Dict[str, any], cat_id: int, is_search_items: bool, search_i
 def update_sold_items_in_category(cat_id: int):
     """
     Обновляет статус продано или нет товара в бд по временной дельте.
-    Если товар не обновлялся более 6 часов считаем его проданным
+    Если товар не обновлялся более 5 часов считаем его проданным
     Если товар был продан в промежутке между обновлениями, его статус time_update = null
     сохраниться, считаем его проданным
     """
 
-    delta = timezone.now() - timedelta(hours=6)
+    delta = timezone.now() - timedelta(hours=5)
     qs1 = KufarItems.objects.filter(cat_id=cat_id,
                                     deleted=False,
                                     time_update__lt=delta)
@@ -362,7 +366,7 @@ def update_sold_items_in_category(cat_id: int):
     if qs.exists():
         send_users_msg_sold_items(qs)
         qs.update(deleted=True)
-        logger.info(f'Delta {delta}, update_sold_items_in_category SUCCESS')
+        logger.info(f'Update_sold_items_in_category SUCCESS, Delta {delta}')
     else:
         logger.info('Update_sold_items_in_category FALSE, no one obj in QuerySet')
 
@@ -374,9 +378,8 @@ def send_users_msg_sold_items(qs):
         for obj in qs_fav:
             try:
                 send_users_msg_fav_items(obj, sold=True)
-                obj.in_favorites = False
                 obj.save(update_fields=['in_favorites'])
-                logger.info('Send_users_msg_fav_items Success')
+                logger.info('Send_users_msg_sold_items Success')
             except Exception as ex:
                 logger.exception('\n-------------------------------------------'
                                  f'\nException in send_users_msg_sold_items: {ex}'
@@ -386,13 +389,13 @@ def send_users_msg_sold_items(qs):
 def send_users_msg_fav_items(obj, update=False, sold=False):
     """
     Отправляем сообщение пользователю/ям что у объекта,
-    добавленного в избранное, изменилась цена
+    добавленного в избранное, изменилась цена или он продан.
     """
 
     try:
         for pk in FavoritesItems.objects.filter(pk_item=obj.pk):
             send_message(pk.bot_user.telegram_id, obj=obj, update_fav_message=update, sold_item_message=sold)
-            logger.info('send_message success in update_data func')
+            logger.info('Send_message SUCCESS in send_user_msg_fav_items func')
     except Exception as ex:
         logger.exception('\n---------------------------------------------------------'
                          f'\nException in send_users_msg_fav_items (send_message): {ex}'
