@@ -1,5 +1,6 @@
 import logging
 
+from background_task.models import Task
 from parser.forms import CategoriesForm, KufarItemsForm
 from parser.models import KufarItems
 from parser.services import get_new_updates_in_categories, get_all_data_in_category, get_test_data
@@ -23,7 +24,7 @@ def parse_pages(request):
             data = form.cleaned_data
             cat = data['category']
             if data['update_db'] and not data['test_connect']:  # Создать таску для получения обновлений всех категорий.
-                get_new_updates_in_categories(schedule=10, repeat=1800, priority=2)
+                get_new_updates_in_categories(schedule=10, repeat=Task.EVERY_40_MIN, priority=2)
                 return redirect('parser:parse_pages')
 
             if not data['category']:  # Проверяем наличие категории в запросе.
@@ -40,7 +41,7 @@ def parse_pages(request):
                 get_all_data_in_category(category=cat.__dict__,
                                          cat_id=cat.id,
                                          schedule=20,
-                                         repeat=14400
+                                         repeat=Task.HOURS3
                                          )  # Парсинг всех данных , schedule=10, repeat=10800
                 messages.success(request, 'Сохранено')
 
