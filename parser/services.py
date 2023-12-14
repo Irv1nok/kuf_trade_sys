@@ -24,6 +24,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+
 from webdriver_manager.chrome import ChromeDriverManager
 
 logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ def get_all_data_in_category(category: dict, cat_id: int):
 
     res = parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_used)
     time.sleep(1)
-    if res[0] and not res[1]:  # [0] статус выполнения True/False, [1] True/False новые/б/у
+    if res[0] and not res[1]:  # [0] статус выполнения True/False, [1] True/False новые или б/у
         res = parse_web_page(driver=driver, category=category, cat_id=cat_id, url=cat.url_new)
     if res[0]:
         status = 'SUCCESS'
@@ -177,28 +178,33 @@ def parse_web_page(driver,
             all_items = soup.find_all('a', class_=category['wrapper'])
 
             for item in all_items:
-                try:
-                    price = item.find('p', class_=category['price']).text
-                    title = item.find('h3', class_=category['title']).text
-                    city_date = item.find('div', class_=category['city_date'])
-                    city = city_date.find('p').text
-                    date = city_date.find('span').text
+                url_item = item.get('href')
+                if 'rank=' in url_item:
                     try:
-                        photo = item.find('div', class_=category['photo']).find('img')['src']
-                    except Exception as ex:
-                        logger.info(f'Error in cycle while -> photo {ex}')
-                        photo = None
-                except Exception as ex:  # Пропуск рекламного товара с некорректными данными
-                    logger.info(f'{ex}')
+                        price = item.find('p', class_=category['price']).text
+                        title = item.find('h3', class_=category['title']).text
+                        city_date = item.find('div', class_=category['city_date'])
+                        city = city_date.find('p').text
+                        date = city_date.find('span').text
+                        try:
+                            photo = item.find('div', class_=category['photo']).find('img')['src']
+                        except Exception as ex:
+                            logger.info(f'Error in cycle while -> photo {ex}')
+                            photo = None
+                    except Exception as ex:  # Пропуск рекламного товара с некорректными данными
+                        logger.info(f'{ex}')
+                        continue
+                    else:
+                        item_in_card = {'price': price,
+                                        'title': title,
+                                        'city': city,
+                                        'date': date,
+                                        'url': url_item,
+                                        'id_item': re.search("\d{8,}", item.get("href")).group(),
+                                        'photo': photo,
+                                        'item_state': item_state}
+                else:
                     continue
-                item_in_card = {'price': price,
-                                'title': title,
-                                'city': city,
-                                'date': date,
-                                'url': item.get('href'),
-                                'id_item': re.search("\d{8,}", item.get("href")).group(),
-                                'photo': photo,
-                                'item_state': item_state}
 
                 if test_conn:
                     return item_in_card
