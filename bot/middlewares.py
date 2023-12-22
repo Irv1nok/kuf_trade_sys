@@ -59,8 +59,8 @@ def get_query(message):
 
     elif message.text == 'Задать авто. поиск по параметрам 📩':
         markup = reply_keyboard_back_gen_menu()
-        user = BotUser.objects.get(telegram_id=message.from_user.id)
         if user_data.user_registered:
+            user = BotUser.objects.get(telegram_id=message.from_user.id)
             if user.slots_for_searchitems > 0:
                 user_data.search_item = True
                 markup_inline = keyboards_cats[user_data.category]
