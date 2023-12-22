@@ -179,7 +179,7 @@ def parse_web_page(driver,
 
             for item in all_items:
                 url_item = item.get('href')
-                if 'rank=' in url_item:
+                if 'rank=' in url_item:  # Фильтр последних рекламных объявлений
                     try:
                         price = item.find('p', class_=category['price']).text
                         title = item.find('h3', class_=category['title']).text

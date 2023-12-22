@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 def start(message):
     if BotUser.objects.filter(telegram_id=message.from_user.id).exists():  # Проверяем регистрацию пользователя
         user_data.user_registered = True
+    else:
+        user_data.user_registered = False
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Компьютерная техника. 🖥')
     btn2 = types.KeyboardButton('Телефоны и планшеты. 📱')
@@ -69,12 +71,6 @@ def register_user(message):
             BotUser.objects.get(telegram_id=message.from_user.id)
             btn = types.KeyboardButton('🔙 Главное меню')
             markup.add(btn)
-            bot.send_message(chat_id=message.from_user.id,
-                             text='💬 Вы уже зарегестрированы 👍'
-                                  '\nЕсли вы видите это сообщение после регистрации,'
-                                  '\n*перезапустите бота* в меню комманд /start 🆙',
-                             reply_markup=markup,
-                             parse_mode='Markdown')
         except Exception:
             bot.send_message(message.from_user.id, text='💬 Здорово!👏 Я рад что вы решили зарегестрироваться. '
                                                         'Это позволит вам добавлять товары в избранное, '
@@ -87,23 +83,38 @@ def register_user(message):
             markup.add('Да', 'Нет')
             bot.send_message(message.from_user.id, '💬 Зарегестрироваться? ', reply_markup=markup, parse_mode='HTML')
             bot.register_next_step_handler(message, register_user_step2)
+        else:
+            bot.send_message(chat_id=message.from_user.id,
+                             text='💬 Вы уже зарегестрированы 👍'
+                                  '\nЕсли вы видите это сообщение после регистрации,'
+                                  '\n*перезапустите бота* в меню комманд /start 🆙',
+                             reply_markup=markup,
+                             parse_mode='Markdown')
     else:
         bot.send_message(chat_id=message.from_user.id,
                          text='💬 Вы уже зарегестрированы 👍')
 
 
 def register_user_step2(message):
-    try:
-        BotUser.objects.create(telegram_id=message.from_user.id, name=message.from_user.first_name)
-        bot.send_message(message.from_user.id, text='💬 Успешно! 👍'
+    if message.text == 'Да':
+        try:
+            BotUser.objects.create(telegram_id=message.from_user.id, name=message.from_user.first_name)
+            bot.send_message(message.from_user.id, text='💬 Успешно! 👍'
+                                                        '\nПерезапускаю бота..'
+                                                        '\nВозвращаю в главное меню. 🔙 ')
+        except Exception as ex:
+            logger.exception(f'Error --{ex}-- in register_user_step2')
+            bot.send_message(message.from_user.id, text='💬 Ошибка! 😔 Попробуйте еще раз.'
+                                                        '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. '
+                                                        '/help'
+                                                        '\nВозвращаю в главное меню. 🔙 ')
+        finally:
+            message.text = '/start'
+            start(message)
+    else:
+        bot.send_message(message.from_user.id, text='💬 Сожалею! '
                                                     '\nПерезапускаю бота..'
                                                     '\nВозвращаю в главное меню. 🔙 ')
-    except Exception as ex:
-        logger.exception(f'Error --{ex}-- in register_user_step2')
-        bot.send_message(message.from_user.id, text='💬 Ошибка! 😔 Попробуйте еще раз.'
-                                                    '\nЕсли ошибка ошибка повториться свяжитесь с разработчиком. /help'
-                                                    '\nВозвращаю в главное меню. 🔙 ')
-    finally:
         message.text = '/start'
         start(message)
 
