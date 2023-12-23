@@ -5,7 +5,7 @@ class BotUser(models.Model):
     name = models.CharField(max_length=10)
     slots_for_favitems = models.PositiveIntegerField(default=5)
     slots_for_searchitems = models.PositiveIntegerField(default=2)
-    telegram_id = models.IntegerField(unique=True)
+    telegram_id = models.BigIntegerField(unique=True)
 
     def __str__(self):
         return f'{self.telegram_id} {self.name}'
