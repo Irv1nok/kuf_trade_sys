@@ -51,6 +51,7 @@ def start_chrome_driver():
 
     # driver
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver.maximize_window()
     category = Category.objects.get(pk=1)
     if not os.path.exists('cookies'):
         save_cookies(driver, accept_button_class=category.accept_button)
