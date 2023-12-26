@@ -40,11 +40,12 @@ def start_chrome_driver():
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-crash-reporter')
     options.add_argument('user-data-dir=./profile')  # Создание профиля для адблок
-    options.add_argument('window-size=1920,1080')
+    # options.add_argument('window-size=1920,1080')
     options.add_argument('--blink-settings=imagesEnabled=false')  # Настройки хрома
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_experimental_option('useAutomationExtension', False)
     # off errors in console
+    options.add_experimental_option("useAutomationExtension", False)
     options.add_experimental_option('excludeSwitches', ['enable-automation'])
     options.add_experimental_option('excludeSwitches', ["enable-logging"])
 
